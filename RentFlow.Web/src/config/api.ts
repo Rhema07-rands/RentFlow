@@ -1,6 +1,11 @@
-// Automatically uses current hostname so it works on localhost and LAN IPs seamlessly
+// Priority:
+// 1. VITE_API_URL environment variable (configured in Render / production)
+// 2. Local network IP or localhost:5004 for local dev
 const getBaseUrl = () => {
-  if (typeof window !== 'undefined' && window.location.hostname) {
+  if (import.meta.env.VITE_API_URL) {
+    return (import.meta.env.VITE_API_URL as string).replace(/\/$/, '');
+  }
+  if (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost') {
     return `http://${window.location.hostname}:5004`;
   }
   return 'http://localhost:5004';

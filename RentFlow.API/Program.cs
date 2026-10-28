@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using RentFlow.API.Data;
@@ -6,11 +7,26 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure port for Render or local hosting
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(port))
+{
+    builder.WebHost.UseUrls($"http://*:{port}");
+}
+
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddSignalR();
 builder.Services.AddScoped<RentFlow.API.Services.ICloudinaryService, RentFlow.API.Services.CloudinaryService>();
+
+// Forwarded headers for reverse proxies (Render, Cloudflare, etc.)
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 builder.Services.AddCors(options =>
 {
@@ -79,6 +95,8 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+app.UseForwardedHeaders();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -88,6 +106,16 @@ app.UseCors("AllowWebApp");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Root health check endpoint for Render and ping monitors
+app.MapGet("/", () => Results.Ok(new
+{
+    status = "online",
+    service = "RentFlow API",
+    version = "1.0.0",
+    timestamp = DateTime.UtcNow
+}));
+
 app.MapControllers();
 app.MapHub<RentFlow.API.Hubs.ChatHub>("/chathub");
 app.MapHub<RentFlow.API.Hubs.CallHub>("/callhub");
