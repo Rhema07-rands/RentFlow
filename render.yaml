@@ -1,11 +1,11 @@
 services:
-  # 1. RentFlow Backend API (.NET 9 Web API)
+  # 1. RentFlow Backend API (.NET 9 Web API in Docker)
   - type: web
     name: rentflow-api
-    env: docker
+    runtime: docker
+    plan: free
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    plan: free
     healthCheckPath: /
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
@@ -14,9 +14,11 @@ services:
   # 2. RentFlow Web Frontend (React + Vite SPA)
   - type: web
     name: rentflow-web
-    env: static
-    buildCommand: cd RentFlow.Web && npm install && npm run build
-    staticPublishPath: ./RentFlow.Web/dist
+    runtime: static
+    plan: free
+    rootDir: RentFlow.Web
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
     routes:
       - type: rewrite
         source: /*

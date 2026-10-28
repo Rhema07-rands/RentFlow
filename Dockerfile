@@ -14,7 +14,7 @@ RUN dotnet publish "RentFlow.API.csproj" -c Release -o /app/publish /p:UseAppHos
 # Runtime Stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
 WORKDIR /app
-EXPOSE 8080
-ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 10000
+ENV ASPNETCORE_URLS=http://+:10000
 COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "RentFlow.API.dll"]

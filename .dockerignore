@@ -1,0 +1,11 @@
+**/.git
+**/.expo
+**/node_modules
+RentFlow.Web
+app
+assets
+contexts
+**/bin
+**/obj
+*.user
+*.suo
