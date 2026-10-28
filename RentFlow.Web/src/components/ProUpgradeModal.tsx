@@ -44,6 +44,40 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({ isOpen, onClos
     });
   };
 
+  const handlePaymentSuccess = async (reference: string) => {
+    try {
+      const verifyRes = await fetch(`${API_BASE}/api/subscription/verify-paystack`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          reference: reference,
+          plan: selectedPlan,
+        }),
+      });
+
+      if (verifyRes.ok) {
+        const data = await verifyRes.json();
+        updateUserState({
+          isPremium: true,
+          subscriptionPlan: data.subscriptionPlan || selectedPlan,
+          subscriptionExpiresAt: data.subscriptionExpiresAt,
+        });
+        showAlert('Welcome to RentFlow Pro! 👑', 'All ads have been permanently removed.');
+        onClose();
+      } else {
+        const err = await verifyRes.text();
+        showAlert('Verification Warning', err || 'Could not verify payment reference.');
+      }
+    } catch (e: any) {
+      showAlert('Verification Error', e.message || 'Payment verification failed.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handlePaystackPayment = async () => {
     if (!token || !user) {
       showAlert('Sign In Required', 'Please sign in or create an account to activate RentFlow Pro.');
@@ -71,41 +105,10 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({ isOpen, onClos
             { display_name: 'Plan', variable_name: 'subscription_plan', value: selectedPlan },
           ],
         },
-        callback: async (response: { reference: string }) => {
-          // Verify with backend
-          try {
-            const verifyRes = await fetch(`${API_BASE}/api/subscription/verify-paystack`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                reference: response.reference,
-                plan: selectedPlan,
-              }),
-            });
-
-            if (verifyRes.ok) {
-              const data = await verifyRes.json();
-              updateUserState({
-                isPremium: true,
-                subscriptionPlan: data.subscriptionPlan || selectedPlan,
-                subscriptionExpiresAt: data.subscriptionExpiresAt,
-              });
-              showAlert('Welcome to RentFlow Pro! 👑', 'All ads have been permanently removed.');
-              onClose();
-            } else {
-              const err = await verifyRes.text();
-              showAlert('Verification Warning', err || 'Could not verify payment reference.');
-            }
-          } catch (e: any) {
-            showAlert('Verification Error', e.message || 'Payment verification failed.');
-          } finally {
-            setIsProcessing(false);
-          }
+        callback: function (response: { reference: string }) {
+          handlePaymentSuccess(response.reference);
         },
-        onClose: () => {
+        onClose: function () {
           setIsProcessing(false);
         },
       });
