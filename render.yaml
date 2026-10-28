@@ -15,7 +15,6 @@ services:
   - type: web
     name: rentflow-web
     runtime: static
-    plan: free
     rootDir: RentFlow.Web
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
