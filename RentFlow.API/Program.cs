@@ -39,15 +39,15 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Register DbContext
+// Register DbContext (Use explicit MySQL 8.0 ServerVersion to avoid blocking/crashing on startup if DB is waking up)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(
         connectionString,
-        ServerVersion.AutoDetect(connectionString),
+        new MySqlServerVersion(new Version(8, 0, 31)),
         mySqlOptions => mySqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 3,
-            maxRetryDelay: TimeSpan.FromSeconds(5),
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
             errorNumbersToAdd: null
         )
     ));
@@ -120,20 +120,23 @@ app.MapControllers();
 app.MapHub<RentFlow.API.Hubs.ChatHub>("/chathub");
 app.MapHub<RentFlow.API.Hubs.CallHub>("/callhub");
 
-// Auto-ensure user premium columns exist in DB
-try
+// Auto-ensure user premium columns exist in DB asynchronously so port binding is never delayed
+_ = Task.Run(async () =>
 {
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.ExecuteSqlRaw(@"
-        ALTER TABLE Users ADD COLUMN IF NOT EXISTS IsPremium TINYINT(1) DEFAULT 0;
-        ALTER TABLE Users ADD COLUMN IF NOT EXISTS SubscriptionPlan VARCHAR(100) NULL;
-        ALTER TABLE Users ADD COLUMN IF NOT EXISTS SubscriptionExpiresAt DATETIME NULL;
-    ");
-}
-catch
-{
-    // Ignore if database already has columns or doesn't support IF NOT EXISTS
-}
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await db.Database.ExecuteSqlRawAsync(@"
+            ALTER TABLE Users ADD COLUMN IF NOT EXISTS IsPremium TINYINT(1) DEFAULT 0;
+            ALTER TABLE Users ADD COLUMN IF NOT EXISTS SubscriptionPlan VARCHAR(100) NULL;
+            ALTER TABLE Users ADD COLUMN IF NOT EXISTS SubscriptionExpiresAt DATETIME NULL;
+        ");
+    }
+    catch
+    {
+        // Ignore if database already has columns or doesn't support IF NOT EXISTS
+    }
+});
 
 app.Run();

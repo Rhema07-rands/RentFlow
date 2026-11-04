@@ -10,23 +10,23 @@ export const LandingPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#0F172A] text-[#F8FAFC] relative overflow-hidden flex flex-col justify-between">
       {/* Ambient Background Glows */}
-      <div className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-[#38BDF8]/10 blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-[450px] h-[450px] rounded-full bg-blue-600/10 blur-[140px] pointer-events-none" />
+      <div className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-[#38BDF8]/10 blur-[140px] pointer-events-none animate-float-slow" />
+      <div className="absolute bottom-0 right-0 w-[450px] h-[450px] rounded-full bg-blue-600/10 blur-[140px] pointer-events-none animate-pulse duration-[6000ms]" />
 
       {/* Top Navigation */}
-      <header className="relative z-10 max-w-7xl w-full mx-auto px-6 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#38BDF8] flex items-center justify-center shadow-lg shadow-[#38BDF8]/30">
+      <header className="relative z-10 max-w-7xl w-full mx-auto px-6 py-6 flex items-center justify-between animate-fade-in-down">
+        <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/')}>
+          <div className="w-12 h-12 rounded-2xl bg-[#38BDF8] flex items-center justify-center shadow-lg shadow-[#38BDF8]/30 group-hover:scale-105 group-hover:rotate-[-2deg] transition-all duration-300">
             <Home className="w-6 h-6 text-[#0F172A]" />
           </div>
-          <span className="text-2xl font-extrabold tracking-tight text-[#F8FAFC]">RentFlow</span>
+          <span className="text-2xl font-extrabold tracking-tight text-[#F8FAFC] group-hover:text-[#38BDF8] transition-colors">RentFlow</span>
         </div>
 
         <div className="flex items-center gap-3">
           {user ? (
             <button
               onClick={() => navigate('/dashboard/explore')}
-              className="px-5 py-2.5 rounded-xl bg-[#38BDF8] text-[#0F172A] font-bold text-sm shadow-lg shadow-[#38BDF8]/25 hover:bg-[#38BDF8]/90 transition-all"
+              className="px-5 py-2.5 rounded-xl bg-[#38BDF8] text-[#0F172A] font-bold text-sm shadow-lg shadow-[#38BDF8]/25 hover:bg-[#38BDF8]/90 transition-all btn-press hover:shadow-xl hover:shadow-[#38BDF8]/30"
             >
               Go to Dashboard
             </button>
@@ -34,13 +34,13 @@ export const LandingPage: React.FC = () => {
             <>
               <button
                 onClick={() => navigate('/login')}
-                className="px-5 py-2.5 rounded-xl text-[#38BDF8] bg-[#38BDF8]/10 border border-[#38BDF8]/20 font-bold text-sm hover:bg-[#38BDF8]/20 transition-all"
+                className="px-5 py-2.5 rounded-xl text-[#38BDF8] bg-[#38BDF8]/10 border border-[#38BDF8]/20 font-bold text-sm hover:bg-[#38BDF8]/20 transition-all btn-press"
               >
                 Login
               </button>
               <button
                 onClick={() => navigate('/register')}
-                className="px-5 py-2.5 rounded-xl bg-[#38BDF8] text-[#0F172A] font-bold text-sm shadow-lg shadow-[#38BDF8]/25 hover:bg-[#38BDF8]/90 transition-all"
+                className="px-5 py-2.5 rounded-xl bg-[#38BDF8] text-[#0F172A] font-bold text-sm shadow-lg shadow-[#38BDF8]/25 hover:bg-[#38BDF8]/90 transition-all btn-press hover:shadow-xl hover:shadow-[#38BDF8]/30"
               >
                 Create Account
               </button>
@@ -51,14 +51,14 @@ export const LandingPage: React.FC = () => {
 
       {/* Hero Section */}
       <main className="relative z-10 max-w-7xl w-full mx-auto px-6 py-12 lg:py-20 grid lg:grid-cols-2 gap-12 items-center">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#1E293B] border border-white/10 text-[#38BDF8] text-xs font-bold mb-6">
-            <Sparkles className="w-3.5 h-3.5" />
+        <div className="animate-fade-in-up">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#1E293B] border border-white/10 text-[#38BDF8] text-xs font-bold mb-6 shadow-sm">
+            <Sparkles className="w-3.5 h-3.5 animate-pulse" />
             <span>NIGERIA&apos;S MODERN PROPERTY & REAL-TIME RENT PORTAL</span>
           </div>
 
           <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight leading-[1.1] text-[#F8FAFC] mb-6">
-            Discover & Manage <span className="text-[#38BDF8]">Properties</span> Effortlessly.
+            Discover & Manage <span className="text-[#38BDF8] underline decoration-[#38BDF8]/30 underline-offset-8">Properties</span> Effortlessly.
           </h1>
 
           <p className="text-lg text-[#94A3B8] leading-relaxed mb-8 max-w-xl">
@@ -68,22 +68,22 @@ export const LandingPage: React.FC = () => {
           <div className="flex flex-wrap items-center gap-4">
             <button
               onClick={() => navigate('/register')}
-              className="px-8 py-4 rounded-2xl bg-[#38BDF8] text-[#0F172A] font-extrabold text-base shadow-xl shadow-[#38BDF8]/30 hover:bg-[#38BDF8]/90 transition-all flex items-center gap-2"
+              className="px-8 py-4 rounded-2xl bg-[#38BDF8] text-[#0F172A] font-extrabold text-base shadow-xl shadow-[#38BDF8]/30 hover:bg-[#38BDF8]/90 transition-all duration-200 btn-press flex items-center gap-2 hover:shadow-2xl hover:shadow-[#38BDF8]/40"
             >
               <span>Create Account</span>
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" />
             </button>
 
             <button
               onClick={() => navigate('/login')}
-              className="px-8 py-4 rounded-2xl bg-[#38BDF8]/10 border border-[#38BDF8]/25 text-[#38BDF8] font-extrabold text-base hover:bg-[#38BDF8]/20 transition-all"
+              className="px-8 py-4 rounded-2xl bg-[#38BDF8]/10 border border-[#38BDF8]/25 text-[#38BDF8] font-extrabold text-base hover:bg-[#38BDF8]/20 transition-all duration-200 btn-press"
             >
               Login
             </button>
 
             <button
               onClick={() => navigate('/dashboard/explore')}
-              className="px-4 py-4 text-[#94A3B8] hover:text-[#F8FAFC] font-semibold text-sm underline underline-offset-4 transition-colors"
+              className="px-4 py-4 text-[#94A3B8] hover:text-[#F8FAFC] font-semibold text-sm underline underline-offset-4 transition-colors hover:text-[#38BDF8]"
             >
               Skip for now (Explore Demo)
             </button>
@@ -91,32 +91,32 @@ export const LandingPage: React.FC = () => {
 
           {/* Feature Highlights */}
           <div className="grid sm:grid-cols-3 gap-4 mt-12 pt-8 border-t border-white/10">
-            <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-xl bg-[#1E293B] text-[#38BDF8]">
+            <div className="flex items-start gap-3 group">
+              <div className="p-2.5 rounded-xl bg-[#1E293B] text-[#38BDF8] border border-white/5 group-hover:bg-[#38BDF8] group-hover:text-[#0F172A] group-hover:scale-110 transition-all duration-300">
                 <Building2 className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-sm text-[#F8FAFC]">Verified Listings</h3>
+                <h3 className="font-bold text-sm text-[#F8FAFC] group-hover:text-[#38BDF8] transition-colors">Verified Listings</h3>
                 <p className="text-xs text-[#94A3B8] mt-0.5">Direct owners & transparent annual pricing</p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-xl bg-[#1E293B] text-[#38BDF8]">
+            <div className="flex items-start gap-3 group">
+              <div className="p-2.5 rounded-xl bg-[#1E293B] text-[#38BDF8] border border-white/5 group-hover:bg-[#38BDF8] group-hover:text-[#0F172A] group-hover:scale-110 transition-all duration-300">
                 <MessageSquare className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-sm text-[#F8FAFC]">Live Chat & Voice</h3>
+                <h3 className="font-bold text-sm text-[#F8FAFC] group-hover:text-[#38BDF8] transition-colors">Live Chat & Voice</h3>
                 <p className="text-xs text-[#94A3B8] mt-0.5">WhatsApp-grade messaging, images & voice notes</p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-xl bg-[#1E293B] text-[#38BDF8]">
+            <div className="flex items-start gap-3 group">
+              <div className="p-2.5 rounded-xl bg-[#1E293B] text-[#38BDF8] border border-white/5 group-hover:bg-[#38BDF8] group-hover:text-[#0F172A] group-hover:scale-110 transition-all duration-300">
                 <Video className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-sm text-[#F8FAFC]">Audio & Video Calls</h3>
+                <h3 className="font-bold text-sm text-[#F8FAFC] group-hover:text-[#38BDF8] transition-colors">Audio & Video Calls</h3>
                 <p className="text-xs text-[#94A3B8] mt-0.5">Encrypted WebRTC calls for virtual inspections</p>
               </div>
             </div>
@@ -124,23 +124,23 @@ export const LandingPage: React.FC = () => {
         </div>
 
         {/* Right Showcase Card */}
-        <div className="relative">
-          <div className="bg-[#1E293B] border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
-            <div className="relative h-80">
+        <div className="relative animate-fade-in-up [animation-delay:150ms]">
+          <div className="bg-[#1E293B] border border-white/10 rounded-3xl overflow-hidden shadow-2xl card-hover animate-float-slow group">
+            <div className="relative h-80 overflow-hidden">
               <img
                 src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1000"
                 alt="Featured Property"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
               />
-              <div className="absolute top-4 left-4 bg-[#0F172A]/80 backdrop-blur-md px-3.5 py-1.5 rounded-xl text-[#38BDF8] text-xs font-bold">
+              <div className="absolute top-4 left-4 bg-[#0F172A]/80 backdrop-blur-md px-3.5 py-1.5 rounded-xl text-[#38BDF8] text-xs font-bold border border-white/10 shadow-sm">
                 Duplex • Featured
               </div>
-              <div className="absolute bottom-4 right-4 bg-[#0F172A]/90 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10">
+              <div className="absolute bottom-4 right-4 bg-[#0F172A]/90 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 shadow-lg">
                 <span className="text-[#38BDF8] font-extrabold text-lg">₦8,000,000/yr</span>
               </div>
             </div>
             <div className="p-6">
-              <h3 className="text-xl font-bold text-[#F8FAFC]">Executive 4-Bed Detached Duplex</h3>
+              <h3 className="text-xl font-bold text-[#F8FAFC] group-hover:text-[#38BDF8] transition-colors duration-200">Executive 4-Bed Detached Duplex</h3>
               <p className="text-sm text-[#94A3B8] mt-1">Ikeja GRA, Lagos • 4 Beds • 4 Baths • 3,200 Sqft</p>
               <div className="mt-5 pt-5 border-t border-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -156,7 +156,7 @@ export const LandingPage: React.FC = () => {
                 </div>
                 <button
                   onClick={() => navigate('/dashboard/property/3')}
-                  className="px-4 py-2 rounded-xl bg-[#38BDF8] text-[#0F172A] font-bold text-xs hover:bg-[#38BDF8]/90 transition-colors"
+                  className="px-4 py-2 rounded-xl bg-[#38BDF8] text-[#0F172A] font-bold text-xs hover:bg-[#38BDF8]/90 transition-all btn-press shadow-sm"
                 >
                   Inspect Property
                 </button>

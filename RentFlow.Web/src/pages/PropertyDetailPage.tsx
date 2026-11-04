@@ -206,7 +206,7 @@ export const PropertyDetailPage: React.FC = () => {
       <div className="flex items-center justify-between mb-6">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#1E293B] border border-white/10 text-[#F8FAFC] font-bold text-sm hover:border-[#38BDF8] transition-all"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#1E293B] border border-white/10 text-[#F8FAFC] font-bold text-sm hover:border-[#38BDF8] transition-all btn-press"
         >
           <ChevronLeft className="w-5 h-5" />
           <span>Back to Listings</span>
@@ -215,10 +215,10 @@ export const PropertyDetailPage: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={toggleSave}
-            className="p-3 rounded-2xl bg-[#1E293B] border border-white/10 hover:border-red-400/50 transition-all"
+            className="p-3 rounded-2xl bg-[#1E293B] border border-white/10 hover:border-red-400/50 transition-all btn-press hover:scale-105 active:scale-75"
             title="Save Property"
           >
-            <Heart className={`w-5 h-5 ${isSaved ? 'text-red-500 fill-red-500' : 'text-[#F8FAFC]'}`} />
+            <Heart className={`w-5 h-5 transition-colors duration-200 ${isSaved ? 'text-red-500 fill-red-500' : 'text-[#F8FAFC]'}`} />
           </button>
 
           <button
@@ -226,7 +226,7 @@ export const PropertyDetailPage: React.FC = () => {
               navigator.clipboard?.writeText(window.location.href);
               showAlert('Link Copied', 'Property link copied to clipboard!');
             }}
-            className="p-3 rounded-2xl bg-[#1E293B] border border-white/10 hover:border-[#38BDF8]/50 transition-all"
+            className="p-3 rounded-2xl bg-[#1E293B] border border-white/10 hover:border-[#38BDF8]/50 transition-all btn-press hover:scale-105"
             title="Share Property"
           >
             <Share2 className="w-5 h-5 text-[#F8FAFC]" />
@@ -243,13 +243,14 @@ export const PropertyDetailPage: React.FC = () => {
             controls
             playsInline
             poster={getVideoPoster(rawImages[activeImageIndex])}
-            className="w-full h-full object-contain bg-black"
+            className="w-full h-full object-contain bg-black animate-fade-in"
           />
         ) : (
           <img
+            key={rawImages[activeImageIndex]}
             src={rawImages[activeImageIndex]}
             alt={property.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover animate-fade-in"
           />
         )}
 
@@ -259,7 +260,7 @@ export const PropertyDetailPage: React.FC = () => {
               onClick={() =>
                 setActiveImageIndex((prev) => (prev === 0 ? rawImages.length - 1 : prev - 1))
               }
-              className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-[#0F172A]/80 backdrop-blur-md text-white flex items-center justify-center hover:bg-[#38BDF8] hover:text-[#0F172A] transition-colors shadow-lg z-10"
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-[#0F172A]/80 backdrop-blur-md text-white flex items-center justify-center hover:bg-[#38BDF8] hover:text-[#0F172A] transition-all btn-press shadow-lg z-10"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
@@ -267,7 +268,7 @@ export const PropertyDetailPage: React.FC = () => {
               onClick={() =>
                 setActiveImageIndex((prev) => (prev === rawImages.length - 1 ? 0 : prev + 1))
               }
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-[#0F172A]/80 backdrop-blur-md text-white flex items-center justify-center hover:bg-[#38BDF8] hover:text-[#0F172A] transition-colors shadow-lg z-10"
+              className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-[#0F172A]/80 backdrop-blur-md text-white flex items-center justify-center hover:bg-[#38BDF8] hover:text-[#0F172A] transition-all btn-press shadow-lg z-10"
             >
               <ChevronRight className="w-6 h-6" />
             </button>
@@ -303,10 +304,10 @@ export const PropertyDetailPage: React.FC = () => {
                 key={idx}
                 type="button"
                 onClick={() => setActiveImageIndex(idx)}
-                className={`relative w-24 h-16 rounded-xl overflow-hidden shrink-0 border-2 transition-all bg-[#0F172A] ${
+                className={`relative w-24 h-16 rounded-xl overflow-hidden shrink-0 border-2 transition-all duration-200 bg-[#0F172A] btn-press ${
                   isActive
-                    ? 'border-[#38BDF8] ring-2 ring-[#38BDF8]/30 scale-105'
-                    : 'border-white/10 opacity-70 hover:opacity-100 hover:border-white/30'
+                    ? 'border-[#38BDF8] ring-2 ring-[#38BDF8]/40 scale-105 shadow-md shadow-[#38BDF8]/20'
+                    : 'border-white/10 opacity-70 hover:opacity-100 hover:border-white/30 hover:scale-[1.02]'
                 }`}
               >
                 {isVid ? (
@@ -556,7 +557,7 @@ export const PropertyDetailPage: React.FC = () => {
               <div className="space-y-3">
                 <button
                   onClick={handleContactOwner}
-                  className="w-full py-4 rounded-2xl bg-[#38BDF8] text-[#0F172A] font-extrabold text-base flex items-center justify-center gap-2 shadow-lg shadow-[#38BDF8]/25 hover:bg-[#38BDF8]/90 transition-all"
+                  className="w-full py-4 rounded-2xl bg-[#38BDF8] text-[#0F172A] font-extrabold text-base flex items-center justify-center gap-2 shadow-lg shadow-[#38BDF8]/25 hover:bg-[#38BDF8]/90 transition-all duration-200 btn-press"
                 >
                   <MessageSquare className="w-5 h-5" />
                   <span>Apply / Chat with Owner</span>
@@ -565,7 +566,7 @@ export const PropertyDetailPage: React.FC = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => handleCallOwner('audio')}
-                    className="py-3 rounded-2xl bg-[#0F172A] border border-white/10 hover:border-[#38BDF8] text-[#F8FAFC] font-bold text-xs flex items-center justify-center gap-2 transition-all"
+                    className="py-3 rounded-2xl bg-[#0F172A] border border-white/10 hover:border-[#38BDF8] text-[#F8FAFC] font-bold text-xs flex items-center justify-center gap-2 transition-all duration-200 btn-press hover:bg-white/5"
                   >
                     <Phone className="w-4 h-4 text-[#38BDF8]" />
                     <span>Audio Call</span>
@@ -573,7 +574,7 @@ export const PropertyDetailPage: React.FC = () => {
 
                   <button
                     onClick={() => handleCallOwner('video')}
-                    className="py-3 rounded-2xl bg-[#0F172A] border border-white/10 hover:border-[#38BDF8] text-[#F8FAFC] font-bold text-xs flex items-center justify-center gap-2 transition-all"
+                    className="py-3 rounded-2xl bg-[#0F172A] border border-white/10 hover:border-[#38BDF8] text-[#F8FAFC] font-bold text-xs flex items-center justify-center gap-2 transition-all duration-200 btn-press hover:bg-white/5"
                   >
                     <Video className="w-4 h-4 text-[#38BDF8]" />
                     <span>Video Tour</span>

@@ -85,14 +85,14 @@ export const AdBanner: React.FC<AdBannerProps> = ({
   const Icon = sponsor.icon;
 
   return (
-    <div className="relative rounded-3xl bg-gradient-to-r from-[#1E293B] via-[#0F172A] to-[#1E293B] border border-[#38BDF8]/25 p-5 sm:p-6 shadow-2xl my-6 overflow-hidden group transition-all hover:border-[#38BDF8]/50">
+    <div className="relative rounded-3xl bg-gradient-to-r from-[#1E293B] via-[#0F172A] to-[#1E293B] border border-[#38BDF8]/25 p-5 sm:p-6 shadow-2xl my-6 overflow-hidden group card-hover hover:border-[#38BDF8]/50 animate-fade-in">
       {/* Background glow decoration */}
-      <div className="absolute -top-12 -right-12 w-48 h-48 bg-[#38BDF8]/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-12 -right-12 w-48 h-48 bg-[#38BDF8]/5 rounded-full blur-3xl pointer-events-none animate-pulse-glow" />
 
       {/* Top Header bar inside Ad */}
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-extrabold tracking-widest text-[#94A3B8] uppercase bg-white/5 px-2.5 py-0.5 rounded-md border border-white/5 flex items-center gap-1">
+          <span className="text-[10px] font-extrabold tracking-widest text-[#94A3B8] uppercase bg-white/5 px-2.5 py-0.5 rounded-md border border-white/5 flex items-center gap-1 shadow-sm">
             <Globe className="w-2.5 h-2.5 text-[#38BDF8]" />
             {hasRealAdSense ? 'Google Ads & Partner' : 'Sponsored Partner'}
           </span>
@@ -106,7 +106,7 @@ export const AdBanner: React.FC<AdBannerProps> = ({
           <button
             type="button"
             onClick={onUpgradeClick}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold text-[#38BDF8] bg-[#38BDF8]/10 hover:bg-[#38BDF8] hover:text-[#0F172A] border border-[#38BDF8]/30 transition-all shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold text-[#38BDF8] bg-[#38BDF8]/10 hover:bg-[#38BDF8] hover:text-[#0F172A] border border-[#38BDF8]/30 transition-all btn-press shadow-sm hover:shadow-md hover:shadow-[#38BDF8]/20"
             title="Upgrade to RentFlow Pro to remove all ads"
           >
             <Sparkles className="w-3.5 h-3.5" />
@@ -132,12 +132,12 @@ export const AdBanner: React.FC<AdBannerProps> = ({
         /* Native High-CPM Real Estate Sponsor */
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-start sm:items-center gap-3.5 flex-1 min-w-0">
-            <div className="w-12 h-12 rounded-2xl bg-[#0F172A] border border-white/10 flex items-center justify-center text-[#38BDF8] shrink-0 shadow-inner group-hover:scale-105 transition-transform">
+            <div className="w-12 h-12 rounded-2xl bg-[#0F172A] border border-white/10 flex items-center justify-center text-[#38BDF8] shrink-0 shadow-inner group-hover:scale-105 group-hover:rotate-[-2deg] transition-all duration-300">
               <Icon className="w-6 h-6" />
             </div>
 
             <div className="min-w-0">
-              <h4 className="text-base font-extrabold text-[#F8FAFC] group-hover:text-[#38BDF8] transition-colors line-clamp-1">
+              <h4 className="text-base font-extrabold text-[#F8FAFC] group-hover:text-[#38BDF8] transition-colors duration-200 line-clamp-1">
                 {sponsor.title}
               </h4>
               <p className="text-xs text-[#94A3B8] mt-0.5 line-clamp-2">
@@ -151,7 +151,7 @@ export const AdBanner: React.FC<AdBannerProps> = ({
               href={sponsor.link}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-[#F8FAFC] font-bold text-xs transition-all border border-white/5"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-[#F8FAFC] font-bold text-xs transition-all btn-press border border-white/5 hover:border-white/20"
             >
               <span>{sponsor.cta}</span>
               <ExternalLink className="w-3.5 h-3.5 text-[#94A3B8]" />

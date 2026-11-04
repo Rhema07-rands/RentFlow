@@ -441,14 +441,14 @@ export const ChatsPage: React.FC = () => {
             <div className="flex items-center gap-2.5">
               <button
                 onClick={() => startCall(activeContactId, displayName, 'audio')}
-                className="w-10 h-10 rounded-full bg-[#38BDF8]/15 text-[#38BDF8] hover:bg-[#38BDF8] hover:text-[#0F172A] flex items-center justify-center transition-all"
+                className="w-10 h-10 rounded-full bg-[#38BDF8]/15 text-[#38BDF8] hover:bg-[#38BDF8] hover:text-[#0F172A] flex items-center justify-center transition-all btn-press shadow-sm"
                 title="Start Audio Call"
               >
                 <Phone className="w-4 h-4" />
               </button>
               <button
                 onClick={() => startCall(activeContactId, displayName, 'video')}
-                className="w-10 h-10 rounded-full bg-[#38BDF8]/15 text-[#38BDF8] hover:bg-[#38BDF8] hover:text-[#0F172A] flex items-center justify-center transition-all"
+                className="w-10 h-10 rounded-full bg-[#38BDF8]/15 text-[#38BDF8] hover:bg-[#38BDF8] hover:text-[#0F172A] flex items-center justify-center transition-all btn-press shadow-sm"
                 title="Start Video Call"
               >
                 <Video className="w-4 h-4" />
@@ -517,11 +517,11 @@ export const ChatsPage: React.FC = () => {
           <div className="p-4 bg-[#1E293B] border-t border-white/5 relative">
             {/* Share Files Popover */}
             {showAttachMenu && (
-              <div className="absolute bottom-20 left-4 bg-[#0F172A] border border-white/10 rounded-2xl p-3 shadow-2xl flex items-center gap-4 z-20 animate-in fade-in slide-in-from-bottom-2">
+              <div className="absolute bottom-20 left-4 bg-[#0F172A] border border-white/10 rounded-2xl p-3 shadow-2xl flex items-center gap-4 z-20 animate-fade-in-up">
                 <button
                   type="button"
                   onClick={() => imageInputRef.current?.click()}
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-white/5 transition-colors"
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-white/5 transition-all btn-press"
                 >
                   <div className="w-12 h-12 rounded-full bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
                     <ImageIcon className="w-6 h-6" />
@@ -532,7 +532,7 @@ export const ChatsPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => docInputRef.current?.click()}
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-white/5 transition-colors"
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-white/5 transition-all btn-press"
                 >
                   <div className="w-12 h-12 rounded-full bg-amber-500/15 text-amber-400 flex items-center justify-center">
                     <FileText className="w-6 h-6" />

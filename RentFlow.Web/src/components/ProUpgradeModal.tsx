@@ -154,23 +154,23 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({ isOpen, onClos
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-lg rounded-3xl bg-[#0F172A] border border-[#38BDF8]/30 shadow-2xl overflow-hidden p-6 sm:p-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full max-w-lg rounded-3xl bg-[#0F172A] border border-[#38BDF8]/30 shadow-2xl overflow-hidden p-6 sm:p-8 animate-scale-in">
         {/* Glow behind */}
-        <div className="absolute top-0 right-0 w-72 h-72 bg-[#38BDF8]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-72 h-72 bg-[#38BDF8]/10 rounded-full blur-3xl pointer-events-none animate-pulse-glow" />
 
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full bg-white/5 hover:bg-white/10 text-[#94A3B8] hover:text-white transition-colors"
+          className="absolute top-5 right-5 p-2 rounded-full bg-white/5 hover:bg-white/10 text-[#94A3B8] hover:text-white transition-all btn-press"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 rounded-2xl bg-[#38BDF8]/15 border border-[#38BDF8]/30 text-[#38BDF8] flex items-center justify-center">
-            <Sparkles className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-2xl bg-[#38BDF8]/15 border border-[#38BDF8]/30 text-[#38BDF8] flex items-center justify-center shadow-md shadow-[#38BDF8]/10">
+            <Sparkles className="w-6 h-6 animate-pulse" />
           </div>
           <div>
             <h2 className="text-2xl font-black text-[#F8FAFC]">RentFlow Pro</h2>
@@ -183,9 +183,9 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({ isOpen, onClos
           <button
             type="button"
             onClick={() => setSelectedPlan('ProMonthly')}
-            className={`p-4 rounded-2xl border text-left transition-all ${
+            className={`p-4 rounded-2xl border text-left transition-all duration-200 btn-press ${
               selectedPlan === 'ProMonthly'
-                ? 'bg-[#1E293B] border-[#38BDF8] ring-2 ring-[#38BDF8]/20'
+                ? 'bg-[#1E293B] border-[#38BDF8] ring-2 ring-[#38BDF8]/20 shadow-md shadow-[#38BDF8]/10'
                 : 'bg-[#1E293B]/40 border-white/5 hover:border-white/20'
             }`}
           >
@@ -197,13 +197,13 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({ isOpen, onClos
           <button
             type="button"
             onClick={() => setSelectedPlan('ProAnnual')}
-            className={`p-4 rounded-2xl border text-left transition-all relative ${
+            className={`p-4 rounded-2xl border text-left transition-all duration-200 relative btn-press ${
               selectedPlan === 'ProAnnual'
-                ? 'bg-[#1E293B] border-[#38BDF8] ring-2 ring-[#38BDF8]/20'
+                ? 'bg-[#1E293B] border-[#38BDF8] ring-2 ring-[#38BDF8]/20 shadow-md shadow-[#38BDF8]/10'
                 : 'bg-[#1E293B]/40 border-white/5 hover:border-white/20'
             }`}
           >
-            <span className="absolute -top-2.5 right-3 bg-emerald-500 text-[#0F172A] font-extrabold text-[10px] px-2 py-0.5 rounded-full shadow">
+            <span className="absolute -top-2.5 right-3 bg-emerald-500 text-[#0F172A] font-extrabold text-[10px] px-2 py-0.5 rounded-full shadow animate-pulse">
               SAVE 30%
             </span>
             <span className="text-xs font-bold text-[#94A3B8] block">Annual</span>
@@ -247,7 +247,7 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({ isOpen, onClos
         <button
           onClick={handlePaystackPayment}
           disabled={isProcessing}
-          className="w-full py-4 rounded-2xl bg-[#38BDF8] hover:bg-[#38BDF8]/90 text-[#0F172A] font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#38BDF8]/20 transition-all disabled:opacity-50"
+          className="w-full py-4 rounded-2xl bg-[#38BDF8] hover:bg-[#38BDF8]/90 text-[#0F172A] font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-[#38BDF8]/25 transition-all duration-200 btn-press hover:shadow-xl hover:shadow-[#38BDF8]/30 disabled:opacity-50"
         >
           {isProcessing ? (
             <Loader2 className="w-5 h-5 animate-spin" />

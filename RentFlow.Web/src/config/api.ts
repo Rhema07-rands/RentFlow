@@ -1,13 +1,25 @@
 // Priority:
-// 1. VITE_API_URL environment variable (configured in Render / production)
-// 2. Local network IP or localhost:5004 for local dev
+// 1. VITE_API_URL environment variable (configured in Render / production build)
+// 2. If hosted on Render (*.onrender.com) or custom HTTPS domain, default to live Render backend
+// 3. Local network IP or localhost:5004 for local dev
 const getBaseUrl = () => {
   const metaEnv = (import.meta as any).env;
   if (metaEnv?.VITE_API_URL) {
     return (metaEnv.VITE_API_URL as string).replace(/\/$/, '');
   }
-  if (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost') {
-    return `http://${window.location.hostname}:5004`;
+  if (typeof window !== 'undefined') {
+    // If hosted on Render (e.g. rentflow-web.onrender.com)
+    if (window.location.hostname.includes('onrender.com')) {
+      return 'https://rentflow-api.onrender.com';
+    }
+    // If served over HTTPS on a production domain without explicit VITE_API_URL
+    if (window.location.protocol === 'https:' && window.location.hostname !== 'localhost') {
+      return 'https://rentflow-api.onrender.com';
+    }
+    // Local dev: accessing from another machine on local network
+    if (window.location.hostname && window.location.hostname !== 'localhost') {
+      return `http://${window.location.hostname}:5004`;
+    }
   }
   return 'http://localhost:5004';
 };

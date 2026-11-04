@@ -44,7 +44,7 @@ export const SavedPage: React.FC = () => {
       <div className="flex items-center gap-4 mb-8">
         <button
           onClick={() => navigate(-1)}
-          className="w-11 h-11 rounded-full bg-[#1E293B] border border-white/10 flex items-center justify-center text-[#F8FAFC] hover:border-[#38BDF8]"
+          className="w-11 h-11 rounded-full bg-[#1E293B] border border-white/10 flex items-center justify-center text-[#F8FAFC] hover:border-[#38BDF8] transition-all btn-press"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
@@ -69,7 +69,7 @@ export const SavedPage: React.FC = () => {
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {savedProperties.map((item) => {
+          {savedProperties.map((item, idx) => {
             const images =
               item.images && item.images.length > 0
                 ? item.images.map((i: any) => (typeof i === 'string' ? i : i.url))
@@ -81,13 +81,14 @@ export const SavedPage: React.FC = () => {
                 onClick={() =>
                   navigate(`/dashboard/property/${item.id}`, { state: { property: item } })
                 }
-                className="bg-[#1E293B] rounded-3xl overflow-hidden border border-white/5 hover:border-[#38BDF8]/40 transition-all cursor-pointer group"
+                style={{ animationDelay: `${Math.min(idx * 70, 350)}ms` }}
+                className="bg-[#1E293B] rounded-3xl overflow-hidden border border-white/5 hover:border-[#38BDF8]/40 transition-all duration-300 card-hover cursor-pointer group animate-fade-in-up"
               >
                 <div className="relative h-52 bg-[#334155] overflow-hidden">
                   {isVideoMedia(images[0]) ? (
                     <video
                       src={images[0]}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                       muted
                       playsInline
                     />
@@ -95,25 +96,25 @@ export const SavedPage: React.FC = () => {
                     <img
                       src={images[0]}
                       alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                     />
                   )}
                   <div className="absolute top-4 left-4 flex items-center gap-1.5 flex-wrap">
                     {item.propertyType && (
-                      <div className="bg-[#0F172A]/80 px-3 py-1 rounded-xl text-xs font-bold text-[#38BDF8]">
+                      <div className="bg-[#0F172A]/80 px-3 py-1 rounded-xl text-xs font-bold text-[#38BDF8] border border-white/10 shadow-sm">
                         {item.propertyType}
                       </div>
                     )}
                     {images.some(isVideoMedia) && (
-                      <div className="bg-[#0F172A]/90 backdrop-blur-md px-2.5 py-1 rounded-xl border border-white/10 flex items-center gap-1 text-[#38BDF8] text-xs font-bold">
-                        <Video className="w-3.5 h-3.5" />
+                      <div className="bg-[#0F172A]/90 backdrop-blur-md px-2.5 py-1 rounded-xl border border-white/10 flex items-center gap-1 text-[#38BDF8] text-xs font-bold shadow-sm">
+                        <Video className="w-3.5 h-3.5 animate-pulse" />
                         <span>Video Tour</span>
                       </div>
                     )}
                   </div>
                   <button
                     onClick={(e) => removeSaved(e, item.id)}
-                    className="absolute top-4 right-4 w-9 h-9 rounded-full bg-[#0F172A]/80 flex items-center justify-center hover:scale-110 transition-transform"
+                    className="absolute top-4 right-4 w-9 h-9 rounded-full bg-[#0F172A]/80 flex items-center justify-center hover:scale-110 active:scale-75 transition-all duration-200 border border-white/10"
                     title="Remove from Saved"
                   >
                     <Heart className="w-4 h-4 text-red-500 fill-red-500" />
@@ -121,10 +122,10 @@ export const SavedPage: React.FC = () => {
                 </div>
 
                 <div className="p-5">
-                  <span className="text-2xl font-extrabold text-[#38BDF8]">
+                  <span className="text-2xl font-extrabold text-[#38BDF8] tracking-tight">
                     ₦{Number(item.price).toLocaleString()}/yr
                   </span>
-                  <h3 className="text-lg font-bold text-[#F8FAFC] mt-1 truncate">{item.title}</h3>
+                  <h3 className="text-lg font-bold text-[#F8FAFC] mt-1 truncate group-hover:text-[#38BDF8] transition-colors duration-200">{item.title}</h3>
                   <p className="text-sm text-[#94A3B8] flex items-center gap-1 mt-1 mb-4 truncate">
                     <MapPin className="w-4 h-4 shrink-0" /> {item.location}
                   </p>

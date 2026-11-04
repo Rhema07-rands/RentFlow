@@ -76,14 +76,14 @@ export const ExplorePage: React.FC = () => {
 
         <div className="flex items-center gap-3">
           {user?.isPremium ? (
-            <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-yellow-500/40 text-yellow-400 font-extrabold text-xs shadow-sm">
+            <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-yellow-500/40 text-yellow-400 font-extrabold text-xs shadow-sm shadow-yellow-500/10 animate-pulse">
               <Sparkles className="w-4 h-4 fill-current" />
               <span>PRO ACTIVE</span>
             </div>
           ) : (
             <button
               onClick={() => setShowUpgradeModal(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-[#38BDF8]/10 hover:bg-[#38BDF8] text-[#38BDF8] hover:text-[#0F172A] border border-[#38BDF8]/30 font-extrabold text-xs transition-all shadow-sm"
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-[#38BDF8]/10 hover:bg-[#38BDF8] text-[#38BDF8] hover:text-[#0F172A] border border-[#38BDF8]/30 font-extrabold text-xs transition-all duration-200 btn-press hover:shadow-md hover:shadow-[#38BDF8]/20"
               title="Remove ads & unlock Pro features"
             >
               <Sparkles className="w-4 h-4" />
@@ -96,17 +96,17 @@ export const ExplorePage: React.FC = () => {
               setRefreshing(true);
               fetchProperties();
             }}
-            className="p-3 rounded-2xl bg-[#1E293B] border border-white/10 text-[#94A3B8] hover:text-[#F8FAFC] hover:border-white/20 transition-all"
+            className="p-3 rounded-2xl bg-[#1E293B] border border-white/10 text-[#94A3B8] hover:text-[#F8FAFC] hover:border-white/20 transition-all btn-press"
             title="Refresh listings"
           >
-            <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin text-[#38BDF8]' : ''}`} />
+            <RefreshCw className={`w-5 h-5 transition-transform duration-300 ${refreshing ? 'animate-spin text-[#38BDF8]' : 'hover:rotate-180'}`} />
           </button>
 
           <button
             onClick={() => navigate('/dashboard/saved')}
-            className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-[#1E293B] border border-white/10 text-[#F8FAFC] font-bold text-sm hover:border-[#38BDF8]/50 transition-all"
+            className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-[#1E293B] border border-white/10 text-[#F8FAFC] font-bold text-sm hover:border-[#38BDF8]/50 transition-all btn-press group"
           >
-            <Heart className="w-4 h-4 text-red-400 fill-red-400" />
+            <Heart className="w-4 h-4 text-red-400 fill-red-400 group-hover:scale-125 transition-transform duration-200" />
             <span>Saved ({savedIds.length})</span>
           </button>
         </div>
@@ -114,12 +114,29 @@ export const ExplorePage: React.FC = () => {
 
       {/* Content Grid */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-32">
-          <Loader2 className="w-10 h-10 text-[#38BDF8] animate-spin mb-3" />
-          <p className="text-sm text-[#94A3B8]">Loading verified properties...</p>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+          {[1, 2, 3, 4, 5, 6].map((k) => (
+            <div key={k} className="bg-[#1E293B] rounded-3xl overflow-hidden border border-white/5 shadow-xl flex flex-col">
+              <div className="h-56 shimmer-placeholder w-full" />
+              <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <div className="h-6 w-32 rounded-lg shimmer-placeholder" />
+                    <div className="h-6 w-14 rounded-xl shimmer-placeholder" />
+                  </div>
+                  <div className="h-5 w-4/5 rounded-lg shimmer-placeholder mb-2" />
+                  <div className="h-4 w-3/5 rounded-lg shimmer-placeholder" />
+                </div>
+                <div className="pt-4 border-t border-white/5 flex justify-between items-center">
+                  <div className="h-4 w-24 rounded-lg shimmer-placeholder" />
+                  <div className="h-4 w-20 rounded-lg shimmer-placeholder" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : properties.length === 0 ? (
-        <div className="text-center py-28 bg-[#1E293B]/40 rounded-3xl border border-white/5">
+        <div className="text-center py-28 bg-[#1E293B]/40 rounded-3xl border border-white/5 animate-fade-in">
           <p className="text-lg font-bold text-[#F8FAFC]">No properties found</p>
           <p className="text-sm text-[#94A3B8] mt-1">Be the first to list a property on RentFlow!</p>
         </div>
@@ -138,14 +155,15 @@ export const ExplorePage: React.FC = () => {
               <React.Fragment key={item.id}>
                 <div
                   onClick={() => navigate(`/dashboard/property/${item.id}`, { state: { property: item } })}
-                  className="group bg-[#1E293B] rounded-3xl overflow-hidden border border-white/5 hover:border-[#38BDF8]/40 transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1 cursor-pointer flex flex-col"
+                  style={{ animationDelay: `${Math.min(idx * 70, 420)}ms` }}
+                  className="group card-hover bg-[#1E293B] rounded-3xl overflow-hidden border border-white/5 hover:border-[#38BDF8]/40 shadow-xl cursor-pointer flex flex-col animate-fade-in-up"
                 >
                   {/* Image Header */}
                   <div className="relative h-56 overflow-hidden bg-[#334155]">
                     {isMainVideo ? (
                       <video
                         src={mainImage}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                         muted
                         playsInline
                       />
@@ -153,25 +171,25 @@ export const ExplorePage: React.FC = () => {
                       <img
                         src={mainImage}
                         alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                       />
                     )}
 
                     <div className="absolute top-4 left-4 flex items-center gap-1.5 flex-wrap">
                       {item.isSponsored && !user?.isPremium && (
                         <div className="bg-amber-500/25 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-amber-500/40 text-amber-300 text-xs font-black flex items-center gap-1 shadow-sm">
-                          <Sparkles className="w-3.5 h-3.5 fill-current" />
+                          <Sparkles className="w-3.5 h-3.5 fill-current animate-pulse" />
                           <span>Sponsored</span>
                         </div>
                       )}
                       {item.propertyType && (
-                        <div className="bg-[#0F172A]/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
+                        <div className="bg-[#0F172A]/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 shadow-sm">
                           <span className="text-[#38BDF8] text-xs font-bold">{item.propertyType}</span>
                         </div>
                       )}
                       {hasVideo && (
-                        <div className="bg-[#0F172A]/90 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-white/10 flex items-center gap-1 text-[#38BDF8] text-xs font-bold">
-                          <Video className="w-3.5 h-3.5" />
+                        <div className="bg-[#0F172A]/90 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-white/10 flex items-center gap-1 text-[#38BDF8] text-xs font-bold shadow-sm">
+                          <Video className="w-3.5 h-3.5 animate-pulse" />
                           <span>Video Tour</span>
                         </div>
                       )}
@@ -179,17 +197,17 @@ export const ExplorePage: React.FC = () => {
 
                     <button
                       onClick={(e) => toggleSave(e, item)}
-                      className="absolute top-4 right-4 w-9 h-9 rounded-full bg-[#0F172A]/75 backdrop-blur-md flex items-center justify-center hover:scale-110 transition-transform"
+                      className="absolute top-4 right-4 w-9 h-9 rounded-full bg-[#0F172A]/75 backdrop-blur-md flex items-center justify-center hover:scale-110 active:scale-75 transition-all duration-200 border border-white/10"
                     >
                       <Heart
-                        className={`w-4 h-4 ${
+                        className={`w-4 h-4 transition-colors duration-200 ${
                           isSaved ? 'text-red-500 fill-red-500' : 'text-[#F8FAFC]'
                         }`}
                       />
                     </button>
 
                     {item.views !== undefined && (
-                      <div className="absolute bottom-3 right-3 bg-[#0F172A]/75 backdrop-blur-md px-2.5 py-1 rounded-lg flex items-center gap-1 text-[11px] text-[#94A3B8]">
+                      <div className="absolute bottom-3 right-3 bg-[#0F172A]/75 backdrop-blur-md px-2.5 py-1 rounded-lg flex items-center gap-1 text-[11px] text-[#94A3B8] border border-white/5">
                         <Eye className="w-3 h-3 text-[#38BDF8]" />
                         <span>{item.views}</span>
                       </div>
@@ -200,15 +218,15 @@ export const ExplorePage: React.FC = () => {
                   <div className="p-5 flex-1 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-2.5">
-                        <span className="text-2xl font-extrabold text-[#38BDF8]">
+                        <span className="text-2xl font-extrabold text-[#38BDF8] tracking-tight">
                           ₦{Number(item.price).toLocaleString()}<span className="text-xs font-semibold text-[#94A3B8]">/yr</span>
                         </span>
-                        <span className="px-3 py-1 rounded-xl bg-[#38BDF8] text-[#0F172A] text-xs font-extrabold">
+                        <span className="px-3 py-1 rounded-xl bg-[#38BDF8] text-[#0F172A] text-xs font-extrabold shadow-sm shadow-[#38BDF8]/20 group-hover:scale-105 transition-transform duration-200">
                           View
                         </span>
                       </div>
 
-                      <h3 className="text-lg font-bold text-[#F8FAFC] line-clamp-1 group-hover:text-[#38BDF8] transition-colors">
+                      <h3 className="text-lg font-bold text-[#F8FAFC] line-clamp-1 group-hover:text-[#38BDF8] transition-colors duration-200">
                         {item.title}
                       </h3>
 
@@ -246,7 +264,7 @@ export const ExplorePage: React.FC = () => {
 
                 {/* Native In-Feed Sponsor Ad (automatically hidden if user is Pro) */}
                 {idx === 2 && (
-                  <div className="col-span-full">
+                  <div className="col-span-full animate-fade-in-up">
                     <AdBanner placement="feed" onUpgradeClick={() => setShowUpgradeModal(true)} />
                   </div>
                 )}

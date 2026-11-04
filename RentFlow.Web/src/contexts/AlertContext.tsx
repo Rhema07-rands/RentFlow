@@ -42,13 +42,13 @@ export function AlertProvider({ children }: { children: ReactNode }) {
     <AlertContext.Provider value={{ showAlert }}>
       {children}
       {isVisible && (
-        <div className="fixed top-6 right-6 z-[9999] max-w-md w-full animate-in fade-in slide-in-from-top-5 duration-200 px-4 sm:px-0">
+        <div className="fixed top-6 right-6 z-[9999] max-w-md w-full animate-fade-in-down px-4 sm:px-0">
           <div
             onClick={() => hideAlert(onCloseCallback)}
-            className="bg-[#1E293B] border border-white/10 rounded-2xl p-4 shadow-2xl flex items-start gap-3.5 cursor-pointer hover:border-white/20 transition-all"
+            className="bg-[#1E293B] border border-white/10 rounded-2xl p-4 shadow-2xl shadow-black/80 flex items-start gap-3.5 cursor-pointer hover:border-white/20 transition-all card-hover"
           >
             <div className={`p-2 rounded-xl shrink-0 ${isError ? 'bg-red-500/15 text-red-400' : 'bg-[#38BDF8]/15 text-[#38BDF8]'}`}>
-              {isError ? <AlertCircle className="w-6 h-6" /> : <CheckCircle2 className="w-6 h-6" />}
+              {isError ? <AlertCircle className="w-6 h-6 animate-pulse" /> : <CheckCircle2 className="w-6 h-6 animate-scale-in" />}
             </div>
             <div className="flex-1 min-w-0">
               <h4 className="text-[#F8FAFC] font-bold text-sm capitalize">{title}</h4>
@@ -59,7 +59,7 @@ export function AlertProvider({ children }: { children: ReactNode }) {
                 e.stopPropagation();
                 hideAlert(onCloseCallback);
               }}
-              className="text-[#64748B] hover:text-[#F8FAFC] p-1 rounded-lg transition-colors"
+              className="text-[#64748B] hover:text-[#F8FAFC] p-1.5 rounded-lg transition-colors btn-press hover:bg-white/5"
             >
               <X className="w-4 h-4" />
             </button>

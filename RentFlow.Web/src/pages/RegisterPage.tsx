@@ -72,12 +72,16 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F172A] text-[#F8FAFC] flex justify-center items-center py-12 px-6">
-      <div className="w-full max-w-xl bg-[#1E293B] border border-white/10 rounded-3xl p-8 shadow-2xl">
+    <div className="min-h-screen bg-[#0F172A] text-[#F8FAFC] flex justify-center items-center py-12 px-6 relative overflow-hidden">
+      {/* Subtle ambient glows */}
+      <div className="absolute top-1/4 -left-32 w-80 h-80 rounded-full bg-[#38BDF8]/10 blur-[120px] pointer-events-none animate-float-slow" />
+      <div className="absolute bottom-1/4 -right-32 w-80 h-80 rounded-full bg-blue-600/10 blur-[120px] pointer-events-none" />
+
+      <div className="w-full max-w-xl bg-[#1E293B] border border-white/10 rounded-3xl p-8 shadow-2xl relative z-10 animate-scale-in">
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={() => navigate(-1)}
-            className="w-11 h-11 rounded-full bg-[#0F172A] border border-white/10 flex items-center justify-center text-[#F8FAFC] hover:border-[#38BDF8] transition-colors"
+            className="w-11 h-11 rounded-full bg-[#0F172A] border border-white/10 flex items-center justify-center text-[#F8FAFC] hover:border-[#38BDF8] transition-all btn-press"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -87,10 +91,10 @@ export const RegisterPage: React.FC = () => {
 
         {/* Profile Picture Picker */}
         <div className="flex flex-col items-center mb-8">
-          <div className="relative">
+          <div className="relative group">
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="w-28 h-28 rounded-full bg-[#0F172A] border-2 border-[#38BDF8]/40 overflow-hidden flex items-center justify-center cursor-pointer hover:border-[#38BDF8] transition-all"
+              className="w-28 h-28 rounded-full bg-[#0F172A] border-2 border-[#38BDF8]/40 overflow-hidden flex items-center justify-center cursor-pointer hover:border-[#38BDF8] transition-all hover:scale-105"
             >
               {profileImageBase64 ? (
                 <img src={profileImageBase64} alt="Avatar Preview" className="w-full h-full object-cover" />
@@ -101,7 +105,7 @@ export const RegisterPage: React.FC = () => {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="absolute bottom-0 right-0 w-9 h-9 rounded-full bg-[#38BDF8] text-[#0F172A] flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+              className="absolute bottom-0 right-0 w-9 h-9 rounded-full bg-[#38BDF8] text-[#0F172A] flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all btn-press"
             >
               <Camera className="w-4 h-4" />
             </button>
@@ -248,7 +252,7 @@ export const RegisterPage: React.FC = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-4 rounded-2xl bg-[#38BDF8] text-[#0F172A] font-extrabold text-base shadow-lg shadow-[#38BDF8]/25 hover:bg-[#38BDF8]/90 disabled:opacity-60 transition-all flex items-center justify-center gap-2 mt-4"
+            className="w-full py-4 rounded-2xl bg-[#38BDF8] text-[#0F172A] font-extrabold text-base shadow-lg shadow-[#38BDF8]/25 hover:bg-[#38BDF8]/90 disabled:opacity-60 transition-all duration-200 btn-press flex items-center justify-center gap-2 mt-4 hover:shadow-xl hover:shadow-[#38BDF8]/30"
           >
             {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign Up'}
           </button>
