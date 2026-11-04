@@ -2,25 +2,24 @@
 // 1. VITE_API_URL environment variable (configured in Render / production build)
 // 2. If hosted on Render (*.onrender.com) or custom HTTPS domain, default to live Render backend
 // 3. Local network IP or localhost:5004 for local dev
+const RENDER_API_URL = 'https://rentflow-api-yj5q.onrender.com';
+
 const getBaseUrl = () => {
   const metaEnv = (import.meta as any).env;
   if (metaEnv?.VITE_API_URL) {
     const url = (metaEnv.VITE_API_URL as string).trim().replace(/\/$/, '');
-    return url.startsWith('http') ? url : `https://${url}`;
-  }
-  if (metaEnv?.VITE_API_HOST) {
-    const host = (metaEnv.VITE_API_HOST as string).trim().replace(/\/$/, '');
-    if (host.startsWith('http')) return host;
-    return host.includes('.') ? `https://${host}` : `https://${host}.onrender.com`;
+    if (url !== 'https://rentflow-api.onrender.com') {
+      return url.startsWith('http') ? url : `https://${url}`;
+    }
   }
   if (typeof window !== 'undefined') {
     // If hosted on Render (e.g. rentflow-web-xxxx.onrender.com)
     if (window.location.hostname.includes('onrender.com')) {
-      return 'https://rentflow-api.onrender.com';
+      return RENDER_API_URL;
     }
-    // If served over HTTPS on a production domain without explicit VITE_API_URL
+    // If served over HTTPS on a production domain
     if (window.location.protocol === 'https:' && window.location.hostname !== 'localhost') {
-      return 'https://rentflow-api.onrender.com';
+      return RENDER_API_URL;
     }
     // Local dev: accessing from another machine on local network
     if (window.location.hostname && window.location.hostname !== 'localhost') {

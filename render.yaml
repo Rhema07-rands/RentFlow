@@ -24,14 +24,6 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: rentflow-api
-          envVarKey: RENDER_EXTERNAL_URL
-      - key: VITE_API_HOST
-        fromService:
-          type: web
-          name: rentflow-api
-          envVarKey: RENDER_EXTERNAL_HOSTNAME
+        value: https://rentflow-api-yj5q.onrender.com
       - key: VITE_PAYSTACK_PUBLIC_KEY
         value: pk_test_e397d340917a03d2818924f283ee356174f13457
