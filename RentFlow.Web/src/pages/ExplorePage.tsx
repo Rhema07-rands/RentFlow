@@ -107,7 +107,7 @@ export const ExplorePage: React.FC = () => {
 
       {/* Content Grid */}
       {loading ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 animate-fade-in">
           {[1, 2, 3, 4, 5, 6].map((k) => (
             <div key={k} className="bg-[#1E293B] rounded-3xl overflow-hidden border border-white/5 shadow-xl flex flex-col">
               <div className="h-56 shimmer-placeholder w-full" />
@@ -134,7 +134,7 @@ export const ExplorePage: React.FC = () => {
           <p className="text-sm text-[#94A3B8] mt-1">Be the first to list a property on RentFlow!</p>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
           {properties.map((item, idx) => {
             const images = item.images && item.images.length > 0
               ? item.images.map((i: any) => (typeof i === 'string' ? i : i.url))
@@ -208,30 +208,38 @@ export const ExplorePage: React.FC = () => {
                   </div>
 
                   {/* Card Body */}
-                  <div className="p-5 flex-1 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between gap-2 mb-2.5">
-                        <span className="text-2xl font-extrabold text-[#38BDF8] tracking-tight">
-                          ₦{Number(item.price).toLocaleString()}<span className="text-xs font-semibold text-[#94A3B8]">/yr</span>
+                  <div className="p-5 flex-1 flex flex-col justify-between min-w-0">
+                    <div className="min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-2.5 min-w-0">
+                        <span className="text-lg sm:text-xl font-extrabold text-[#38BDF8] tracking-tight truncate min-w-0">
+                          ₦{Number(item.price).toLocaleString()}
+                          <span className="text-xs font-semibold text-[#94A3B8]">/yr</span>
                         </span>
-                        <span className="px-3 py-1 rounded-xl bg-[#38BDF8] text-[#0F172A] text-xs font-extrabold shadow-sm shadow-[#38BDF8]/20 group-hover:scale-105 transition-transform duration-200">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/dashboard/property/${item.id}`, { state: { property: item } });
+                          }}
+                          className="shrink-0 px-3.5 py-1.5 rounded-xl bg-[#38BDF8] hover:bg-[#38BDF8]/90 text-[#0F172A] text-xs font-extrabold shadow-sm shadow-[#38BDF8]/20 group-hover:scale-105 active:scale-95 transition-all duration-200 btn-press"
+                        >
                           View
-                        </span>
+                        </button>
                       </div>
 
-                      <h3 className="text-lg font-bold text-[#F8FAFC] line-clamp-1 group-hover:text-[#38BDF8] transition-colors duration-200">
+                      <h3 className="text-base sm:text-lg font-bold text-[#F8FAFC] line-clamp-1 group-hover:text-[#38BDF8] transition-colors duration-200">
                         {item.title}
                       </h3>
 
                       <p className="flex items-center gap-1.5 text-sm text-[#94A3B8] mt-1 line-clamp-1">
                         <MapPin className="w-4 h-4 text-[#94A3B8] shrink-0" />
-                        <span>{item.location}</span>
+                        <span className="truncate">{item.location}</span>
                       </p>
                     </div>
 
                     {/* Specs Footer */}
-                    <div className="flex items-center justify-between gap-2 mt-5 pt-4 border-t border-white/5 text-xs font-semibold text-[#94A3B8]">
-                      <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+                    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mt-5 pt-4 border-t border-white/5 text-xs font-semibold text-[#94A3B8]">
+                      <div className="flex items-center gap-3 shrink-0">
                         {item.beds > 0 && (
                           <div className="flex items-center gap-1.5 shrink-0">
                             <Bed className="w-3.5 h-3.5 text-[#38BDF8]" />
@@ -246,7 +254,7 @@ export const ExplorePage: React.FC = () => {
                         )}
                       </div>
                       {item.owner?.name && (
-                        <div className="flex items-center gap-1.5 min-w-0 max-w-[140px] justify-end ml-auto text-right">
+                        <div className="flex items-center gap-1.5 min-w-0 max-w-full sm:max-w-[150px] ml-auto">
                           <User className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
                           <span className="truncate">{item.owner.name}</span>
                         </div>
