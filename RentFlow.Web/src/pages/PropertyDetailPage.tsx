@@ -21,7 +21,7 @@ import {
   Send,
   Sparkles
 } from 'lucide-react';
-import { API_BASE, MOCK_PROPERTIES, getInitials } from '../config/api';
+import { API_BASE, getInitials } from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useCustomAlert } from '../contexts/AlertContext';
 import { useCall } from '../contexts/CallContext';
@@ -50,9 +50,9 @@ export const PropertyDetailPage: React.FC = () => {
   const [savedIds, setSavedIds] = useState<string[]>(() => {
     try {
       const s = localStorage.getItem('rf_saved_ids');
-      return s ? JSON.parse(s) : ['1', '5'];
+      return s ? JSON.parse(s) : [];
     } catch {
-      return ['1', '5'];
+      return [];
     }
   });
 
@@ -74,9 +74,6 @@ export const PropertyDetailPage: React.FC = () => {
         if (propRes.ok) {
           const data = await propRes.json();
           setProperty(data);
-        } else if (!property) {
-          const found = MOCK_PROPERTIES.find((p) => String(p.id) === String(id));
-          if (found) setProperty(found);
         }
 
         const revRes = await fetch(`${API_BASE}/api/reviews/property/${id}`);
@@ -84,10 +81,7 @@ export const PropertyDetailPage: React.FC = () => {
           setReviews(await revRes.json());
         }
       } catch {
-        if (!property) {
-          const found = MOCK_PROPERTIES.find((p) => String(p.id) === String(id));
-          if (found) setProperty(found);
-        }
+        // Ignore network error if property was passed in location.state
       } finally {
         setLoading(false);
       }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, SlidersHorizontal, X, Bed, Bath, MapPin, Loader2, Video, Sparkles } from 'lucide-react';
-import { API_BASE, MOCK_PROPERTIES, PROPERTY_TYPES } from '../config/api';
+import { API_BASE, PROPERTY_TYPES } from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
 import { isVideoMedia } from '../utils/media';
 import { AdBanner } from '../components/AdBanner';
@@ -32,40 +32,18 @@ export const SearchPage: React.FC = () => {
       if (minBeds > 0) url += `beds=${minBeds}&`;
       if (minBaths > 0) url += `baths=${minBaths}&`;
 
-      const controller = new AbortController();
-      const t = setTimeout(() => controller.abort(), 3000);
-      const response = await fetch(url, { signal: controller.signal });
-      clearTimeout(t);
-
+      const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
-        if (Array.isArray(data) && data.length > 0) {
-          setResults(data);
-          setLoading(false);
-          return;
-        }
+        setResults(Array.isArray(data) ? data : []);
+      } else {
+        setResults([]);
       }
     } catch {
-      // Fallback to filtering local MOCK_PROPERTIES if API is unreachable
+      setResults([]);
+    } finally {
+      setLoading(false);
     }
-
-    const filteredMock = MOCK_PROPERTIES.filter((p) => {
-      if (
-        searchQuery &&
-        !p.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !p.location.toLowerCase().includes(searchQuery.toLowerCase())
-      ) {
-        return false;
-      }
-      if (selectedType !== 'All' && p.propertyType !== selectedType) return false;
-      if (maxPrice && p.price > Number(maxPrice)) return false;
-      if (minBeds > 0 && p.beds < minBeds) return false;
-      if (minBaths > 0 && p.baths < minBaths) return false;
-      return true;
-    });
-
-    setResults(filteredMock);
-    setLoading(false);
   }, [searchQuery, selectedType, maxPrice, minBeds, minBaths]);
 
   useEffect(() => {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Bed, Bath, User, Heart, RefreshCw, Loader2, Eye, Video, Sparkles } from 'lucide-react';
-import { API_BASE, MOCK_PROPERTIES } from '../config/api';
+import { API_BASE } from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
 import { isVideoMedia } from '../utils/media';
 import { AdBanner } from '../components/AdBanner';
@@ -17,34 +17,27 @@ export const ExplorePage: React.FC = () => {
   const [savedIds, setSavedIds] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('rf_saved_ids');
-      return saved ? JSON.parse(saved) : ['1', '5'];
+      return saved ? JSON.parse(saved) : [];
     } catch {
-      return ['1', '5'];
+      return [];
     }
   });
 
   const fetchProperties = useCallback(async () => {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
-      const response = await fetch(`${API_BASE}/api/properties`, { signal: controller.signal });
-      clearTimeout(timeoutId);
-
+      const response = await fetch(`${API_BASE}/api/properties`);
       if (response.ok) {
         const data = await response.json();
-        if (Array.isArray(data) && data.length > 0) {
-          setProperties(data);
-          setLoading(false);
-          setRefreshing(false);
-          return;
-        }
+        setProperties(Array.isArray(data) ? data : []);
+      } else {
+        setProperties([]);
       }
     } catch {
-      // Fallback to mock data if API is offline or empty
+      setProperties([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-    setProperties(MOCK_PROPERTIES);
-    setLoading(false);
-    setRefreshing(false);
   }, []);
 
   useEffect(() => {

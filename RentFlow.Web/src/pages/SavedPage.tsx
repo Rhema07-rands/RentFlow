@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Heart, MapPin, Bed, Bath, User, Video } from 'lucide-react';
-import { API_BASE, MOCK_PROPERTIES } from '../config/api';
+import { API_BASE } from '../config/api';
 import { isVideoMedia } from '../utils/media';
 
 export const SavedPage: React.FC = () => {
@@ -9,18 +9,18 @@ export const SavedPage: React.FC = () => {
   const [savedIds, setSavedIds] = useState<string[]>(() => {
     try {
       const s = localStorage.getItem('rf_saved_ids');
-      return s ? JSON.parse(s) : ['1', '5'];
+      return s ? JSON.parse(s) : [];
     } catch {
-      return ['1', '5'];
+      return [];
     }
   });
-  const [allProperties, setAllProperties] = useState<any[]>(MOCK_PROPERTIES);
+  const [allProperties, setAllProperties] = useState<any[]>([]);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/properties`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setAllProperties(data);
         }
       })
