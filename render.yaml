@@ -23,7 +23,10 @@ services:
         source: /*
         destination: /index.html
     envVars:
-      - key: VITE_API_URL
-        value: https://rentflow-api.onrender.com
+      - key: VITE_API_HOST
+        fromService:
+          type: web
+          name: rentflow-api
+          property: host
       - key: VITE_PAYSTACK_PUBLIC_KEY
         value: pk_test_e397d340917a03d2818924f283ee356174f13457

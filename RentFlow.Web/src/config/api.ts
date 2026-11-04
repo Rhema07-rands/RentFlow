@@ -5,10 +5,16 @@
 const getBaseUrl = () => {
   const metaEnv = (import.meta as any).env;
   if (metaEnv?.VITE_API_URL) {
-    return (metaEnv.VITE_API_URL as string).replace(/\/$/, '');
+    const url = (metaEnv.VITE_API_URL as string).trim().replace(/\/$/, '');
+    return url.startsWith('http') ? url : `https://${url}`;
+  }
+  if (metaEnv?.VITE_API_HOST) {
+    const host = (metaEnv.VITE_API_HOST as string).trim().replace(/\/$/, '');
+    if (host.startsWith('http')) return host;
+    return host.includes('.') ? `https://${host}` : `https://${host}.onrender.com`;
   }
   if (typeof window !== 'undefined') {
-    // If hosted on Render (e.g. rentflow-web.onrender.com)
+    // If hosted on Render (e.g. rentflow-web-xxxx.onrender.com)
     if (window.location.hostname.includes('onrender.com')) {
       return 'https://rentflow-api.onrender.com';
     }

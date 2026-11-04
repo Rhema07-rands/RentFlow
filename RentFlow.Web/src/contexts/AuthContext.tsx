@@ -117,7 +117,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (e) {
       console.error(e);
-      showAlert('Connection Error', 'Could not reach the RentFlow API server. If on Render, the free server may be waking up (please wait ~30 seconds and retry). If running locally, please start the API.');
+      showAlert('Connection Error', `Could not reach the RentFlow API server (${API_BASE}). If on Render, ensure the rentflow-api service is Live.`);
       return false;
     }
   };
@@ -139,7 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (e) {
       console.error(e);
-      showAlert('Connection Error', 'Could not reach the RentFlow API server. If on Render, the free server may be waking up (please wait ~30 seconds and retry). If running locally, please start the API.');
+      showAlert('Connection Error', `Could not reach the RentFlow API server (${API_BASE}). If on Render, ensure the rentflow-api service is Live.`);
       return false;
     }
   };
