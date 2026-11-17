@@ -11,6 +11,8 @@ export interface ChatMessage {
   messageType: string; // 'text' | 'image' | 'document' | 'voice'
   timestamp: string;
   isRead: boolean;
+  senderName?: string;
+  senderAvatar?: string;
 }
 
 export interface ConversationInfo {
@@ -28,7 +30,7 @@ interface ChatContextType {
   isConnected: boolean;
   loadConversations: (token: string) => Promise<void>;
   loadHistory: (token: string, contactId: string) => Promise<void>;
-  sendMessage: (receiverId: string, content: string, messageType?: string) => Promise<void>;
+  sendMessage: (receiverId: string, content: string, messageType?: string, contactName?: string) => Promise<void>;
   uploadAttachment: (file: File | Blob, filename?: string) => Promise<string | null>;
   connect: (token: string) => Promise<void>;
   disconnect: () => Promise<void>;
@@ -59,6 +61,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const hubRef = useRef<signalR.HubConnection | null>(null);
   const activeContactRef = useRef<string | null>(null);
   const tokenRef = useRef<string | null>(null);
+  const userRef = useRef<typeof user>(null);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   useEffect(() => {
     activeContactRef.current = activeContactId;
@@ -93,8 +100,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .withAutomaticReconnect()
       .build();
 
-    connection.on('ReceiveMessage', (message: ChatMessage) => {
+    connection.on('ReceiveMessage', (message: ChatMessage, senderName?: string, senderAvatar?: string) => {
       const currentContact = activeContactRef.current;
+      const currentUser = userRef.current;
 
       setMessages(prev => {
         if (
@@ -128,21 +136,22 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       setConversations(prev => {
-        const otherId =
-          user && message.senderId.toLowerCase() === user.id.toLowerCase()
-            ? message.receiverId
-            : message.senderId;
-
+        const isMyMessage = Boolean(currentUser && message.senderId.toLowerCase() === currentUser.id.toLowerCase());
+        const otherId = isMyMessage ? message.receiverId : message.senderId;
         const exists = prev.some(c => c.contactId.toLowerCase() === otherId.toLowerCase());
+        const resolvedSenderName = senderName || message.senderName;
+        const resolvedSenderAvatar = senderAvatar || message.senderAvatar;
+
         if (exists) {
           const updated = prev.map(c =>
             c.contactId.toLowerCase() === otherId.toLowerCase()
               ? {
                   ...c,
+                  contactName: !isMyMessage && resolvedSenderName ? resolvedSenderName : c.contactName,
+                  contactAvatar: !isMyMessage && resolvedSenderAvatar ? resolvedSenderAvatar : c.contactAvatar,
                   latestMessage: message,
                   unreadCount:
-                    currentContact?.toLowerCase() !== otherId.toLowerCase() &&
-                    message.senderId.toLowerCase() === otherId.toLowerCase()
+                    currentContact?.toLowerCase() !== otherId.toLowerCase() && !isMyMessage
                       ? c.unreadCount + 1
                       : c.unreadCount,
                 }
@@ -154,12 +163,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return tB - tA;
           });
         } else {
-          // Immediately insert new conversation card into list so it's not empty
+          // Immediately insert new conversation card into list with actual contact/sender name
           const newConv: ConversationInfo = {
             contactId: otherId,
-            contactName: 'Property Owner',
+            contactName: !isMyMessage && resolvedSenderName ? resolvedSenderName : 'RentFlow Contact',
+            contactAvatar: !isMyMessage ? resolvedSenderAvatar : undefined,
             latestMessage: message,
-            unreadCount: 0,
+            unreadCount: currentContact?.toLowerCase() !== otherId.toLowerCase() && !isMyMessage ? 1 : 0,
           };
           if (tokenRef.current) {
             loadConversations(tokenRef.current);
@@ -179,7 +189,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {
       console.error('SignalR ChatHub Connection Error:', e);
     }
-  }, [user, loadConversations]);
+  }, [loadConversations]);
 
   const disconnect = useCallback(async () => {
     if (hubRef.current) {
@@ -221,57 +231,65 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const sendMessage = useCallback(async (receiverId: string, content: string, messageType: string = 'text') => {
-    // Optimistically append outgoing message locally so UI updates instantly
-    if (user) {
-      const optimisticMsg: ChatMessage = {
-        id: 'opt_' + Date.now().toString(),
-        senderId: user.id,
-        receiverId: receiverId,
-        content: content,
-        messageType: messageType,
-        timestamp: new Date().toISOString(),
-        isRead: false,
-      };
+  const sendMessage = useCallback(
+    async (receiverId: string, content: string, messageType: string = 'text', contactName?: string) => {
+      const currentUser = userRef.current;
+      // Optimistically append outgoing message locally so UI updates instantly
+      if (currentUser) {
+        const optimisticMsg: ChatMessage = {
+          id: 'opt_' + Date.now().toString(),
+          senderId: currentUser.id,
+          receiverId: receiverId,
+          content: content,
+          messageType: messageType,
+          timestamp: new Date().toISOString(),
+          isRead: false,
+        };
 
-      setMessages(prev => [...prev, optimisticMsg]);
+        setMessages(prev => [...prev, optimisticMsg]);
 
-      // Also ensure conversation appears in left list
-      setConversations(prev => {
-        const exists = prev.some(c => c.contactId.toLowerCase() === receiverId.toLowerCase());
-        if (exists) {
-          return prev.map(c =>
-            c.contactId.toLowerCase() === receiverId.toLowerCase()
-              ? { ...c, latestMessage: optimisticMsg }
-              : c
-          );
-        } else {
-          return [
-            {
-              contactId: receiverId,
-              contactName: 'Property Owner',
-              latestMessage: optimisticMsg,
-              unreadCount: 0,
-            },
-            ...prev,
-          ];
+        // Also ensure conversation appears in left list with the actual contactName
+        setConversations(prev => {
+          const exists = prev.some(c => c.contactId.toLowerCase() === receiverId.toLowerCase());
+          if (exists) {
+            return prev.map(c =>
+              c.contactId.toLowerCase() === receiverId.toLowerCase()
+                ? {
+                    ...c,
+                    contactName: contactName || c.contactName,
+                    latestMessage: optimisticMsg,
+                  }
+                : c
+            );
+          } else {
+            return [
+              {
+                contactId: receiverId,
+                contactName: contactName || 'RentFlow Contact',
+                latestMessage: optimisticMsg,
+                unreadCount: 0,
+              },
+              ...prev,
+            ];
+          }
+        });
+      }
+
+      if (hubRef.current && hubRef.current.state === signalR.HubConnectionState.Connected) {
+        try {
+          await hubRef.current.invoke('SendMessage', receiverId, content, messageType, contactName);
+        } catch (e) {
+          console.error('Failed to send message via SignalR', e);
         }
-      });
-    }
-
-    if (hubRef.current && hubRef.current.state === signalR.HubConnectionState.Connected) {
-      try {
-        await hubRef.current.invoke('SendMessage', receiverId, content, messageType);
-      } catch (e) {
-        console.error('Failed to send message via SignalR', e);
+      } else if (tokenRef.current) {
+        await connect(tokenRef.current);
+        if (hubRef.current) {
+          await (hubRef.current as signalR.HubConnection).invoke('SendMessage', receiverId, content, messageType, contactName);
+        }
       }
-    } else if (tokenRef.current) {
-      await connect(tokenRef.current);
-      if (hubRef.current) {
-        await (hubRef.current as signalR.HubConnection).invoke('SendMessage', receiverId, content, messageType);
-      }
-    }
-  }, [user, connect]);
+    },
+    [connect]
+  );
 
   const uploadAttachment = useCallback(async (file: File | Blob, filename?: string): Promise<string | null> => {
     if (!tokenRef.current) return null;

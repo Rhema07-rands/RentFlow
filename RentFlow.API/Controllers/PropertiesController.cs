@@ -62,6 +62,7 @@ namespace RentFlow.API.Controllers
                 .Select(p => new {
                     p.Id, p.Title, p.Description, p.Price, p.Location, p.Status,
                     p.Beds, p.Baths, p.Sqft, p.PropertyType, p.Views,
+                    p.OwnerId,
                     Images = p.Images.Select(i => i.Url),
                     Owner = p.Owner != null ? new { p.Owner.Id, p.Owner.Name, p.Owner.ProfilePictureUrl } : null
                 })
@@ -147,6 +148,7 @@ namespace RentFlow.API.Controllers
                 property.Id, property.Title, property.Description, property.Price,
                 property.Location, property.Status, property.Beds, property.Baths,
                 property.PropertyType, property.Views, property.Sqft,
+                OwnerId = property.OwnerId,
                 Amenities = property.Amenities.Split(',', StringSplitOptions.RemoveEmptyEntries),
                 Images = property.Images.Select(i => new { i.Id, i.Url }),
                 Owner = property.Owner != null ? new { property.Owner.Id, property.Owner.Name } : null

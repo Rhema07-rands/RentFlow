@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace RentFlow.API.Models
 {
     public class ChatMessage
@@ -9,6 +11,12 @@ namespace RentFlow.API.Models
         public string MessageType { get; set; } = "text";
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
         public bool IsRead { get; set; } = false;
+
+        [NotMapped]
+        public string? SenderName { get; set; }
+
+        [NotMapped]
+        public string? SenderAvatar { get; set; }
 
         // Navigation Properties (Optional but good for relationships)
         public User? Sender { get; set; }

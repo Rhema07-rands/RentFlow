@@ -116,7 +116,7 @@ export const PropertyDetailPage: React.FC = () => {
   const hasVideo = rawImages.some((img: string) => isVideoMedia(img));
 
   const sellerName = property.owner?.name || 'Verified Landlord';
-  const ownerId = property.owner?.id || property.ownerId || null;
+  const ownerId = property.owner?.id || property.ownerId || property.OwnerId || null;
   const isOwnProperty = Boolean(user && ownerId && String(ownerId).toLowerCase() === String(user.id).toLowerCase());
 
   const beds = property.bedrooms ?? property.beds ?? 0;
@@ -182,6 +182,10 @@ export const PropertyDetailPage: React.FC = () => {
       navigate('/login');
       return;
     }
+    if (isOwnProperty) {
+      showAlert('Self Contact', 'You cannot message your own listing.');
+      return;
+    }
     if (ownerId) {
       navigate(`/dashboard/conversation/${ownerId}?name=${encodeURIComponent(sellerName)}`);
     } else {
@@ -193,6 +197,10 @@ export const PropertyDetailPage: React.FC = () => {
     if (!token) {
       showAlert('Not Logged In', 'Please log in to start a call with the landlord.');
       navigate('/login');
+      return;
+    }
+    if (isOwnProperty) {
+      showAlert('Self Contact', 'You cannot call your own listing.');
       return;
     }
     if (ownerId) {

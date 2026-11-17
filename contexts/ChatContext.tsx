@@ -58,7 +58,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .withAutomaticReconnect()
       .build();
 
-    connection.on('ReceiveMessage', (message: ChatMessage) => {
+    connection.on('ReceiveMessage', (message: ChatMessage, senderName?: string, senderAvatar?: string) => {
       // If we are actively chatting with this person, append to messages
       setMessages(prev => {
         // Only append if it belongs to the active conversation
@@ -73,17 +73,31 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // We also need to update the conversations list latest message
       setConversations(prev => {
-        const contactId = message.senderId; // Assuming we received it. If we sent it, it's slightly more complex but handled by loadConversations usually
+        const contactId = message.senderId;
         const exists = prev.some(c => c.contactId === contactId);
         if (exists) {
           return prev.map(c => 
             c.contactId === contactId 
-              ? { ...c, latestMessage: message, unreadCount: activeContactId !== contactId ? c.unreadCount + 1 : c.unreadCount } 
+              ? { 
+                  ...c, 
+                  contactName: senderName || c.contactName,
+                  contactAvatar: senderAvatar || c.contactAvatar,
+                  latestMessage: message, 
+                  unreadCount: activeContactId !== contactId ? c.unreadCount + 1 : c.unreadCount 
+                } 
               : c
           );
         } else {
-          // Fetch full conversations again to get the name
-          return prev;
+          return [
+            {
+              contactId: contactId,
+              contactName: senderName || 'RentFlow Contact',
+              contactAvatar: senderAvatar,
+              latestMessage: message,
+              unreadCount: activeContactId !== contactId ? 1 : 0
+            },
+            ...prev
+          ];
         }
       });
     });
@@ -132,10 +146,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const sendMessage = async (receiverId: string, content: string, messageType: string = 'text') => {
+  const sendMessage = async (receiverId: string, content: string, messageType: string = 'text', contactName?: string) => {
     if (hubConnection) {
       try {
-        await hubConnection.invoke('SendMessage', receiverId, content, messageType);
+        await hubConnection.invoke('SendMessage', receiverId, content, messageType, contactName);
       } catch (e) {
         console.error('Failed to send message via SignalR', e);
       }

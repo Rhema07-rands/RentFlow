@@ -28,21 +28,29 @@ namespace RentFlow.API.Controllers
             if (!Guid.TryParse(userIdStr, out Guid userId))
                 return Unauthorized();
 
-            // Find all unique users the current user has chatted with
-            var conversations = await _context.ChatMessages
+            // Fetch all messages for the current user, ordered by timestamp descending
+            // Fetching before GroupBy prevents SQL translation failure in EF Core
+            var userMessages = await _context.ChatMessages
+                .AsNoTracking()
                 .Where(m => m.SenderId == userId || m.ReceiverId == userId)
+                .OrderByDescending(m => m.Timestamp)
+                .ToListAsync();
+
+            // Group in-memory so FirstOrDefault on group is 100% reliable
+            var conversations = userMessages
                 .GroupBy(m => m.SenderId == userId ? m.ReceiverId : m.SenderId)
                 .Select(g => new
                 {
                     ContactId = g.Key,
-                    LatestMessage = g.OrderByDescending(m => m.Timestamp).FirstOrDefault(),
+                    LatestMessage = g.First(),
                     UnreadCount = g.Count(m => m.ReceiverId == userId && !m.IsRead)
                 })
-                .ToListAsync();
+                .ToList();
 
             // Get contact details for these conversations
             var contactIds = conversations.Select(c => c.ContactId).ToList();
             var contacts = await _context.Users
+                .AsNoTracking()
                 .Where(u => contactIds.Contains(u.Id))
                 .Select(u => new { u.Id, u.Name, u.ProfilePictureUrl })
                 .ToListAsync();
@@ -50,10 +58,14 @@ namespace RentFlow.API.Controllers
             var result = conversations.Select(c =>
             {
                 var contact = contacts.FirstOrDefault(u => u.Id == c.ContactId);
+                var resolvedName = !string.IsNullOrWhiteSpace(contact?.Name) && contact.Name != "Property Owner" && contact.Name != "Unknown User"
+                    ? contact.Name
+                    : (!string.IsNullOrWhiteSpace(contact?.Name) ? contact.Name : "RentFlow Contact");
+
                 return new
                 {
                     ContactId = c.ContactId,
-                    ContactName = contact?.Name ?? "Unknown User",
+                    ContactName = resolvedName,
                     ContactAvatar = contact?.ProfilePictureUrl,
                     LatestMessage = c.LatestMessage,
                     UnreadCount = c.UnreadCount

@@ -113,20 +113,7 @@ export const ChatsPage: React.FC = () => {
     const text = inputText.trim();
     setInputText('');
 
-    // Optimistic message append so message shows up instantly in the UI
-    if (user) {
-      const optimisticMsg: ChatMessage = {
-        id: 'opt_' + Date.now().toString(),
-        senderId: user.id,
-        receiverId: activeContactId,
-        content: text,
-        messageType: 'text',
-        timestamp: new Date().toISOString(),
-        isRead: false,
-      };
-      // Send will broadcast via SignalR
-      await sendMessage(activeContactId, text, 'text');
-    }
+    await sendMessage(activeContactId, text, 'text', displayName);
   };
 
   // Image & Document Upload Handler
@@ -143,14 +130,14 @@ export const ChatsPage: React.FC = () => {
       const uploadedUrl = await uploadAttachment(file, file.name);
       if (uploadedUrl) {
         const payload = type === 'document' ? `${file.name}|${uploadedUrl}` : uploadedUrl;
-        await sendMessage(activeContactId, payload, type);
+        await sendMessage(activeContactId, payload, type, displayName);
       } else {
         // Fallback data URL if offline
         const reader = new FileReader();
         reader.onloadend = async () => {
           if (typeof reader.result === 'string') {
             const payload = type === 'document' ? `${file.name}|${reader.result}` : reader.result;
-            await sendMessage(activeContactId, payload, type);
+            await sendMessage(activeContactId, payload, type, displayName);
           }
         };
         reader.readAsDataURL(file);
@@ -186,12 +173,12 @@ export const ChatsPage: React.FC = () => {
         try {
           const uploadedUrl = await uploadAttachment(audioBlob, `voicenote-${Date.now()}.webm`);
           if (uploadedUrl) {
-            await sendMessage(activeContactId, uploadedUrl, 'voice');
+            await sendMessage(activeContactId, uploadedUrl, 'voice', displayName);
           } else {
             const reader = new FileReader();
             reader.onloadend = async () => {
               if (typeof reader.result === 'string') {
-                await sendMessage(activeContactId, reader.result, 'voice');
+                await sendMessage(activeContactId, reader.result, 'voice', displayName);
               }
             };
             reader.readAsDataURL(audioBlob);
