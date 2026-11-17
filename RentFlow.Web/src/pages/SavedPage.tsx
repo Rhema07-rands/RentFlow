@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Heart, MapPin, Bed, Bath, User, Video } from 'lucide-react';
-import { API_BASE, MOCK_PROPERTIES } from '../config/api';
+import { API_BASE } from '../config/api';
 import { isVideoMedia } from '../utils/media';
 
 export const SavedPage: React.FC = () => {
@@ -9,18 +9,18 @@ export const SavedPage: React.FC = () => {
   const [savedIds, setSavedIds] = useState<string[]>(() => {
     try {
       const s = localStorage.getItem('rf_saved_ids');
-      return s ? JSON.parse(s) : ['1', '5'];
+      return s ? JSON.parse(s) : [];
     } catch {
-      return ['1', '5'];
+      return [];
     }
   });
-  const [allProperties, setAllProperties] = useState<any[]>(MOCK_PROPERTIES);
+  const [allProperties, setAllProperties] = useState<any[]>([]);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/properties`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setAllProperties(data);
         }
       })
@@ -44,7 +44,7 @@ export const SavedPage: React.FC = () => {
       <div className="flex items-center gap-4 mb-8">
         <button
           onClick={() => navigate(-1)}
-          className="w-11 h-11 rounded-full bg-[#1E293B] border border-white/10 flex items-center justify-center text-[#F8FAFC] hover:border-[#38BDF8]"
+          className="w-11 h-11 rounded-full bg-[#1E293B] border border-white/10 flex items-center justify-center text-[#F8FAFC] hover:border-[#38BDF8] transition-all btn-press"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
@@ -68,8 +68,8 @@ export const SavedPage: React.FC = () => {
           </button>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {savedProperties.map((item) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+          {savedProperties.map((item, idx) => {
             const images =
               item.images && item.images.length > 0
                 ? item.images.map((i: any) => (typeof i === 'string' ? i : i.url))
@@ -81,13 +81,14 @@ export const SavedPage: React.FC = () => {
                 onClick={() =>
                   navigate(`/dashboard/property/${item.id}`, { state: { property: item } })
                 }
-                className="bg-[#1E293B] rounded-3xl overflow-hidden border border-white/5 hover:border-[#38BDF8]/40 transition-all cursor-pointer group"
+                style={{ animationDelay: `${Math.min(idx * 70, 350)}ms` }}
+                className="bg-[#1E293B] rounded-3xl overflow-hidden border border-white/5 hover:border-[#38BDF8]/40 transition-all duration-300 card-hover cursor-pointer group animate-fade-in-up"
               >
                 <div className="relative h-52 bg-[#334155] overflow-hidden">
                   {isVideoMedia(images[0]) ? (
                     <video
                       src={images[0]}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                       muted
                       playsInline
                     />
@@ -95,42 +96,55 @@ export const SavedPage: React.FC = () => {
                     <img
                       src={images[0]}
                       alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                     />
                   )}
                   <div className="absolute top-4 left-4 flex items-center gap-1.5 flex-wrap">
                     {item.propertyType && (
-                      <div className="bg-[#0F172A]/80 px-3 py-1 rounded-xl text-xs font-bold text-[#38BDF8]">
+                      <div className="bg-[#0F172A]/80 px-3 py-1 rounded-xl text-xs font-bold text-[#38BDF8] border border-white/10 shadow-sm">
                         {item.propertyType}
                       </div>
                     )}
                     {images.some(isVideoMedia) && (
-                      <div className="bg-[#0F172A]/90 backdrop-blur-md px-2.5 py-1 rounded-xl border border-white/10 flex items-center gap-1 text-[#38BDF8] text-xs font-bold">
-                        <Video className="w-3.5 h-3.5" />
+                      <div className="bg-[#0F172A]/90 backdrop-blur-md px-2.5 py-1 rounded-xl border border-white/10 flex items-center gap-1 text-[#38BDF8] text-xs font-bold shadow-sm">
+                        <Video className="w-3.5 h-3.5 animate-pulse" />
                         <span>Video Tour</span>
                       </div>
                     )}
                   </div>
                   <button
                     onClick={(e) => removeSaved(e, item.id)}
-                    className="absolute top-4 right-4 w-9 h-9 rounded-full bg-[#0F172A]/80 flex items-center justify-center hover:scale-110 transition-transform"
+                    className="absolute top-4 right-4 w-9 h-9 rounded-full bg-[#0F172A]/80 flex items-center justify-center hover:scale-110 active:scale-75 transition-all duration-200 border border-white/10"
                     title="Remove from Saved"
                   >
                     <Heart className="w-4 h-4 text-red-500 fill-red-500" />
                   </button>
                 </div>
 
-                <div className="p-5">
-                  <span className="text-2xl font-extrabold text-[#38BDF8]">
-                    ₦{Number(item.price).toLocaleString()}/yr
-                  </span>
-                  <h3 className="text-lg font-bold text-[#F8FAFC] mt-1 truncate">{item.title}</h3>
+                <div className="p-5 min-w-0">
+                  <div className="flex items-center justify-between gap-2 mb-2 min-w-0">
+                    <span className="text-lg sm:text-xl font-extrabold text-[#38BDF8] tracking-tight truncate min-w-0">
+                      ₦{Number(item.price).toLocaleString()}
+                      <span className="text-xs font-semibold text-[#94A3B8]">/yr</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/dashboard/property/${item.id}`, { state: { property: item } });
+                      }}
+                      className="shrink-0 px-3.5 py-1.5 rounded-xl bg-[#38BDF8] hover:bg-[#38BDF8]/90 text-[#0F172A] text-xs font-extrabold shadow-sm shadow-[#38BDF8]/20 group-hover:scale-105 active:scale-95 transition-all duration-200 btn-press"
+                    >
+                      View
+                    </button>
+                  </div>
+                  <h3 className="text-base sm:text-lg font-bold text-[#F8FAFC] mt-1 truncate group-hover:text-[#38BDF8] transition-colors duration-200">{item.title}</h3>
                   <p className="text-sm text-[#94A3B8] flex items-center gap-1 mt-1 mb-4 truncate">
-                    <MapPin className="w-4 h-4 shrink-0" /> {item.location}
+                    <MapPin className="w-4 h-4 shrink-0" /> <span className="truncate">{item.location}</span>
                   </p>
 
-                  <div className="flex items-center justify-between gap-2 text-xs font-semibold text-[#94A3B8] pt-3 border-t border-white/5">
-                    <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+                  <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-xs font-semibold text-[#94A3B8] pt-3 border-t border-white/5">
+                    <div className="flex items-center gap-3 shrink-0">
                       {item.beds > 0 && (
                         <span className="flex items-center gap-1 shrink-0">
                           <Bed className="w-3.5 h-3.5 text-[#38BDF8]" /> {item.beds} {item.beds === 1 ? 'Bed' : 'Beds'}
@@ -143,7 +157,7 @@ export const SavedPage: React.FC = () => {
                       )}
                     </div>
                     {item.owner?.name && (
-                      <span className="flex items-center gap-1 min-w-0 max-w-[140px] justify-end ml-auto truncate text-right">
+                      <span className="flex items-center gap-1 min-w-0 max-w-full sm:max-w-[150px] ml-auto truncate">
                         <User className="w-3.5 h-3.5 shrink-0" />
                         <span className="truncate">{item.owner.name}</span>
                       </span>

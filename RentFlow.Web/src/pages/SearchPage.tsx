@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, SlidersHorizontal, X, Bed, Bath, MapPin, Loader2, Video, Sparkles } from 'lucide-react';
-import { API_BASE, MOCK_PROPERTIES, PROPERTY_TYPES } from '../config/api';
+import { API_BASE, PROPERTY_TYPES } from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
 import { isVideoMedia } from '../utils/media';
 import { AdBanner } from '../components/AdBanner';
@@ -32,40 +32,18 @@ export const SearchPage: React.FC = () => {
       if (minBeds > 0) url += `beds=${minBeds}&`;
       if (minBaths > 0) url += `baths=${minBaths}&`;
 
-      const controller = new AbortController();
-      const t = setTimeout(() => controller.abort(), 3000);
-      const response = await fetch(url, { signal: controller.signal });
-      clearTimeout(t);
-
+      const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
-        if (Array.isArray(data) && data.length > 0) {
-          setResults(data);
-          setLoading(false);
-          return;
-        }
+        setResults(Array.isArray(data) ? data : []);
+      } else {
+        setResults([]);
       }
     } catch {
-      // Fallback to filtering local MOCK_PROPERTIES if API is unreachable
+      setResults([]);
+    } finally {
+      setLoading(false);
     }
-
-    const filteredMock = MOCK_PROPERTIES.filter((p) => {
-      if (
-        searchQuery &&
-        !p.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !p.location.toLowerCase().includes(searchQuery.toLowerCase())
-      ) {
-        return false;
-      }
-      if (selectedType !== 'All' && p.propertyType !== selectedType) return false;
-      if (maxPrice && p.price > Number(maxPrice)) return false;
-      if (minBeds > 0 && p.beds < minBeds) return false;
-      if (minBaths > 0 && p.baths < minBaths) return false;
-      return true;
-    });
-
-    setResults(filteredMock);
-    setLoading(false);
   }, [searchQuery, selectedType, maxPrice, minBeds, minBaths]);
 
   useEffect(() => {
@@ -135,10 +113,10 @@ export const SearchPage: React.FC = () => {
             <button
               key={type}
               onClick={() => setSelectedType(type)}
-              className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap border transition-all ${
+              className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap border transition-all duration-200 btn-press ${
                 selectedType === type
-                  ? 'bg-[#38BDF8]/15 border-[#38BDF8] text-[#38BDF8]'
-                  : 'bg-[#1E293B] border-white/5 text-[#94A3B8] hover:text-[#F8FAFC]'
+                  ? 'bg-[#38BDF8]/15 border-[#38BDF8] text-[#38BDF8] shadow-sm shadow-[#38BDF8]/10'
+                  : 'bg-[#1E293B] border-white/5 text-[#94A3B8] hover:text-[#F8FAFC] hover:border-white/20'
               }`}
             >
               {type}
@@ -148,7 +126,7 @@ export const SearchPage: React.FC = () => {
 
         {/* Collapsible Advanced Filters Panel */}
         {showFilters && (
-          <div className="mt-4 bg-[#1E293B] border border-white/10 rounded-3xl p-6 shadow-2xl animate-in fade-in duration-150">
+          <div className="mt-4 bg-[#1E293B] border border-white/10 rounded-3xl p-6 shadow-2xl animate-fade-in-down">
             <div className="grid md:grid-cols-3 gap-6">
               <div>
                 <label className="block text-sm font-bold text-[#F8FAFC] mb-2">
@@ -225,18 +203,31 @@ export const SearchPage: React.FC = () => {
 
       {/* Results List */}
       {loading ? (
-        <div className="flex justify-center py-24">
-          <Loader2 className="w-9 h-9 text-[#38BDF8] animate-spin" />
+        <div className="grid md:grid-cols-2 gap-5 animate-fade-in">
+          {[1, 2, 3, 4].map((k) => (
+            <div key={k} className="flex bg-[#1E293B] rounded-2xl overflow-hidden border border-white/5 h-36">
+              <div className="w-36 sm:w-44 shrink-0 shimmer-placeholder h-full" />
+              <div className="p-4 flex-1 flex flex-col justify-center space-y-2.5">
+                <div className="h-5 w-24 rounded shimmer-placeholder" />
+                <div className="h-4 w-4/5 rounded shimmer-placeholder" />
+                <div className="h-3 w-3/5 rounded shimmer-placeholder" />
+                <div className="flex gap-2 pt-1">
+                  <div className="h-4 w-12 rounded shimmer-placeholder" />
+                  <div className="h-4 w-12 rounded shimmer-placeholder" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : results.length === 0 ? (
-        <div className="text-center py-24 bg-[#1E293B]/50 rounded-3xl border border-white/5">
+        <div className="text-center py-24 bg-[#1E293B]/50 rounded-3xl border border-white/5 animate-fade-in">
           <Search className="w-14 h-14 text-[#334155] mx-auto mb-3" />
           <h3 className="text-xl font-bold text-[#F8FAFC]">No properties found</h3>
           <p className="text-sm text-[#94A3B8] mt-1">Try adjusting your filters or search area</p>
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-5">
-          {results.map((item) => {
+          {results.map((item, idx) => {
             const images = item.images && item.images.length > 0
               ? item.images.map((i: any) => (typeof i === 'string' ? i : i.url))
               : ['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=1000'];
@@ -245,13 +236,14 @@ export const SearchPage: React.FC = () => {
               <div
                 key={item.id}
                 onClick={() => navigate(`/dashboard/property/${item.id}`, { state: { property: item } })}
-                className="flex bg-[#1E293B] rounded-2xl overflow-hidden border border-white/5 hover:border-[#38BDF8]/40 transition-all cursor-pointer group"
+                style={{ animationDelay: `${Math.min(idx * 60, 360)}ms` }}
+                className="flex bg-[#1E293B] rounded-2xl overflow-hidden border border-white/5 hover:border-[#38BDF8]/40 transition-all duration-300 card-hover cursor-pointer group animate-fade-in-up"
               >
                 <div className="relative w-36 sm:w-44 shrink-0 bg-[#334155] overflow-hidden">
                   {isVideoMedia(images[0]) ? (
                     <video
                       src={images[0]}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                       muted
                       playsInline
                     />
@@ -259,29 +251,29 @@ export const SearchPage: React.FC = () => {
                     <img
                       src={images[0]}
                       alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                     />
                   )}
                   {images.some(isVideoMedia) && (
-                    <div className="absolute bottom-2 left-2 bg-[#0F172A]/90 px-2 py-0.5 rounded-md text-[10px] font-bold text-[#38BDF8] flex items-center gap-1 border border-white/10">
-                      <Video className="w-3 h-3" />
+                    <div className="absolute bottom-2 left-2 bg-[#0F172A]/90 px-2 py-0.5 rounded-md text-[10px] font-bold text-[#38BDF8] flex items-center gap-1 border border-white/10 shadow-sm">
+                      <Video className="w-3 h-3 animate-pulse" />
                       <span>Video</span>
                     </div>
                   )}
                 </div>
                 <div className="p-4 flex-1 flex flex-col justify-center min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-lg font-extrabold text-[#38BDF8]">
+                    <span className="text-lg font-extrabold text-[#38BDF8] tracking-tight">
                       ₦{Number(item.price).toLocaleString()}/yr
                     </span>
                     {item.isSponsored && !user?.isPremium && (
                       <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 shrink-0">
-                        <Sparkles className="w-3 h-3 fill-current" />
+                        <Sparkles className="w-3 h-3 fill-current animate-pulse" />
                         Sponsored
                       </span>
                     )}
                   </div>
-                  <h3 className="text-base font-bold text-[#F8FAFC] truncate mt-1">
+                  <h3 className="text-base font-bold text-[#F8FAFC] truncate mt-1 group-hover:text-[#38BDF8] transition-colors duration-200">
                     {item.title}
                   </h3>
                   <p className="text-xs text-[#94A3B8] flex items-center gap-1 truncate mt-0.5 mb-3">

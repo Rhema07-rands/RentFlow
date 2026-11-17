@@ -117,7 +117,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (e) {
       console.error(e);
-      showAlert('Connection Error', 'Could not connect to the RentFlow API server. Make sure the backend is running on port 5004.');
+      showAlert('Connection Error', `Could not reach the RentFlow API server (${API_BASE}). If on Render, ensure the rentflow-api service is Live.`);
       return false;
     }
   };
@@ -139,7 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (e) {
       console.error(e);
-      showAlert('Connection Error', 'Could not connect to the RentFlow API server.');
+      showAlert('Connection Error', `Could not reach the RentFlow API server (${API_BASE}). If on Render, ensure the rentflow-api service is Live.`);
       return false;
     }
   };

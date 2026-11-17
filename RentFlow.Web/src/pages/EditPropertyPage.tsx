@@ -10,7 +10,7 @@ import {
   Save,
   Loader2
 } from 'lucide-react';
-import { API_BASE, MOCK_PROPERTIES, PROPERTY_TYPES, AMENITY_OPTIONS } from '../config/api';
+import { API_BASE, PROPERTY_TYPES, AMENITY_OPTIONS } from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useCustomAlert } from '../contexts/AlertContext';
 import { isVideoMedia } from '../utils/media';
@@ -53,11 +53,9 @@ export const EditPropertyPage: React.FC = () => {
       } catch {
         // Fallback to state or mock
       }
-      const fallback =
-        location.state?.property ||
-        MOCK_PROPERTIES.find((p) => String(p.id) === String(id)) ||
-        MOCK_PROPERTIES[0];
-      populateForm(fallback);
+      if (location.state?.property) {
+        populateForm(location.state.property);
+      }
     };
 
     const populateForm = (data: any) => {
