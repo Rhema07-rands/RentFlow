@@ -86,14 +86,41 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [callDuration, setCallDuration] = useState(0);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
-  const [callHistory, setCallHistory] = useState<CallLogItem[]>(() => {
+  const [callHistory, setCallHistory] = useState<CallLogItem[]>([]);
+
+  // Automatically purge legacy mock logs from browser storage and isolate logs per user account
+  useEffect(() => {
     try {
-      const saved = localStorage.getItem('rf_call_history');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
+      localStorage.removeItem('rf_call_history');
+    } catch {}
+
+    if (!user?.id) {
+      setCallHistory([]);
+      return;
     }
-  });
+
+    try {
+      const userKey = `rf_call_history_${user.id}`;
+      const saved = localStorage.getItem(userKey);
+      if (saved) {
+        const parsed: CallLogItem[] = JSON.parse(saved);
+        // Permanently filter out any placeholder mock accounts
+        const realLogs = parsed.filter(
+          item =>
+            item.name !== 'Adeola Properties' &&
+            item.name !== 'Lagos Luxury Living' &&
+            item.name !== 'ChiChi Homes' &&
+            !item.contactId.startsWith('00000000-0000')
+        );
+        setCallHistory(realLogs);
+        localStorage.setItem(userKey, JSON.stringify(realLogs));
+      } else {
+        setCallHistory([]);
+      }
+    } catch {
+      setCallHistory([]);
+    }
+  }, [user?.id]);
 
   const hubRef = useRef<signalR.HubConnection | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -103,6 +130,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const addHistoryLog = useCallback((log: Omit<CallLogItem, 'id' | 'time'>) => {
+    if (!user?.id) return;
     const newItem: CallLogItem = {
       ...log,
       id: Date.now().toString(),
@@ -110,10 +138,12 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     setCallHistory(prev => {
       const updated = [newItem, ...prev];
-      localStorage.setItem('rf_call_history', JSON.stringify(updated));
+      try {
+        localStorage.setItem(`rf_call_history_${user.id}`, JSON.stringify(updated));
+      } catch {}
       return updated;
     });
-  }, []);
+  }, [user?.id]);
 
   const cleanupMedia = useCallback(() => {
     if (timerRef.current) {
@@ -389,7 +419,14 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const clearHistory = () => {
     setCallHistory([]);
-    localStorage.removeItem('rf_call_history');
+    if (user?.id) {
+      try {
+        localStorage.removeItem(`rf_call_history_${user.id}`);
+      } catch {}
+    }
+    try {
+      localStorage.removeItem('rf_call_history');
+    } catch {}
   };
 
   return (
