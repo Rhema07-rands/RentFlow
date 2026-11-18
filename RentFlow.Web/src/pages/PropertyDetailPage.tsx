@@ -539,7 +539,7 @@ export const PropertyDetailPage: React.FC = () => {
               </div>
 
               <div className="flex items-baseline gap-1.5 flex-wrap">
-                <span className="text-2xl sm:text-3xl font-extrabold text-[#F8FAFC] tracking-tight">
+                <span className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#F8FAFC] tracking-tight">
                   ₦{Number(property.price).toLocaleString()}
                 </span>
                 <span className="text-xs sm:text-sm font-medium text-[#94A3B8]">/year</span>
@@ -556,21 +556,21 @@ export const PropertyDetailPage: React.FC = () => {
             <div className="h-px bg-white/5" />
 
             {/* Landlord Info Profile Card */}
-            <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-[#0F172A]/70 border border-white/5 hover:border-white/10 transition-all">
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#0F172A]/70 border border-white/5 hover:border-white/10 transition-all">
               <div className="relative shrink-0">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#38BDF8]/20 to-blue-600/30 border border-[#38BDF8]/30 text-[#38BDF8] flex items-center justify-center font-extrabold text-base">
+                <div className="w-10 h-10 rounded-full bg-[#38BDF8]/15 border border-[#38BDF8]/30 text-[#38BDF8] flex items-center justify-center font-bold text-sm">
                   {getInitials(sellerName)}
                 </div>
                 {ownerId && isContactOnline(String(ownerId)) && (
                   <span
-                    className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#0F172A]"
+                    className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-[#0F172A]"
                     title="Online Now"
                   />
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-[#F8FAFC] truncate">{sellerName}</p>
-                <div className="flex items-center gap-1 mt-0.5 text-xs text-[#94A3B8]">
+                <p className="text-xs sm:text-sm font-bold text-[#F8FAFC] truncate">{sellerName}</p>
+                <div className="flex items-center gap-1 mt-0.5 text-[11px] text-[#94A3B8]">
                   <ShieldCheck className="w-3.5 h-3.5 text-[#38BDF8] shrink-0" />
                   <span className="truncate">Property Owner • Verified</span>
                 </div>
@@ -584,35 +584,35 @@ export const PropertyDetailPage: React.FC = () => {
                     state: { property },
                   })
                 }
-                className="w-full py-3.5 px-4 rounded-2xl bg-[#38BDF8]/15 border border-[#38BDF8]/40 text-[#38BDF8] font-extrabold text-sm flex items-center justify-center gap-2 hover:bg-[#38BDF8]/25 transition-all btn-press"
+                className="w-full py-3 px-3.5 rounded-xl bg-[#38BDF8]/15 border border-[#38BDF8]/40 text-[#38BDF8] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 hover:bg-[#38BDF8]/25 transition-all btn-press"
               >
                 <Edit3 className="w-4 h-4" />
                 <span>Edit My Listing</span>
               </button>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 <button
                   onClick={handleContactOwner}
-                  className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#38BDF8] to-blue-600 hover:from-[#38BDF8]/90 hover:to-blue-500 text-white font-extrabold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-[#38BDF8]/20 transition-all duration-200 btn-press group"
+                  className="w-full py-3 px-3 rounded-xl bg-gradient-to-r from-[#38BDF8] to-blue-600 hover:from-[#38BDF8]/90 hover:to-blue-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-[#38BDF8]/15 transition-all duration-200 btn-press group"
                 >
-                  <MessageSquare className="w-5 h-5 shrink-0 group-hover:scale-110 transition-transform" />
-                  <span className="whitespace-nowrap">Apply / Chat with Owner</span>
+                  <MessageSquare className="w-4 h-4 shrink-0 group-hover:scale-110 transition-transform" />
+                  <span className="truncate">Apply / Chat with Owner</span>
                 </button>
 
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => handleCallOwner('audio')}
-                    className="py-3 px-3 rounded-2xl bg-[#0F172A] border border-white/10 hover:border-[#38BDF8]/50 hover:bg-[#38BDF8]/5 text-[#F8FAFC] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all duration-200 btn-press whitespace-nowrap"
+                    className="py-2.5 px-2.5 rounded-xl bg-[#0F172A] border border-white/10 hover:border-[#38BDF8]/50 hover:bg-[#38BDF8]/5 text-[#F8FAFC] font-semibold text-xs flex items-center justify-center gap-1.5 transition-all duration-200 btn-press whitespace-nowrap"
                   >
-                    <Phone className="w-4 h-4 text-[#38BDF8] shrink-0" />
+                    <Phone className="w-3.5 h-3.5 text-[#38BDF8] shrink-0" />
                     <span>Audio Call</span>
                   </button>
 
                   <button
                     onClick={() => handleCallOwner('video')}
-                    className="py-3 px-3 rounded-2xl bg-[#0F172A] border border-white/10 hover:border-[#38BDF8]/50 hover:bg-[#38BDF8]/5 text-[#F8FAFC] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all duration-200 btn-press whitespace-nowrap"
+                    className="py-2.5 px-2.5 rounded-xl bg-[#0F172A] border border-white/10 hover:border-[#38BDF8]/50 hover:bg-[#38BDF8]/5 text-[#F8FAFC] font-semibold text-xs flex items-center justify-center gap-1.5 transition-all duration-200 btn-press whitespace-nowrap"
                   >
-                    <Video className="w-4 h-4 text-[#38BDF8] shrink-0" />
+                    <Video className="w-3.5 h-3.5 text-[#38BDF8] shrink-0" />
                     <span>Video Tour</span>
                   </button>
                 </div>
