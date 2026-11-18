@@ -521,13 +521,15 @@ export const ChatsPage: React.FC = () => {
                             {formatTimeLabel(msg.timestamp)}
                           </span>
                           {isMe && (
-                            msg.isRead ? (
-                              <CheckCheck className="w-3.5 h-3.5 text-[#38BDF8]" title="Read" />
-                            ) : msg.isDelivered ? (
-                              <CheckCheck className="w-3.5 h-3.5 text-[#94A3B8]" title="Delivered" />
-                            ) : (
-                              <Check className="w-3.5 h-3.5 text-[#94A3B8]" title="Sent" />
-                            )
+                            <span title={msg.isRead ? 'Read' : msg.isDelivered ? 'Delivered' : 'Sent'} className="inline-flex items-center">
+                              {msg.isRead ? (
+                                <CheckCheck className="w-3.5 h-3.5 text-[#38BDF8]" />
+                              ) : msg.isDelivered ? (
+                                <CheckCheck className="w-3.5 h-3.5 text-[#94A3B8]" />
+                              ) : (
+                                <Check className="w-3.5 h-3.5 text-[#94A3B8]" />
+                              )}
+                            </span>
                           )}
                         </div>
                       </div>
