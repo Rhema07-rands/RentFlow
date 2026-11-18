@@ -538,16 +538,15 @@ export const PropertyDetailPage: React.FC = () => {
                 </span>
               </div>
 
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl sm:text-4xl font-black text-[#F8FAFC] tracking-tight">
-                  <span className="text-[#38BDF8]">₦</span>
-                  {Number(property.price).toLocaleString()}
+              <div className="flex items-baseline gap-1.5 flex-wrap">
+                <span className="text-2xl sm:text-3xl font-extrabold text-[#F8FAFC] tracking-tight">
+                  ₦{Number(property.price).toLocaleString()}
                 </span>
-                <span className="text-sm font-semibold text-[#94A3B8]">/yr</span>
+                <span className="text-xs sm:text-sm font-medium text-[#94A3B8]">/year</span>
               </div>
 
-              <div className="inline-flex items-center gap-1.5 mt-2.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/5 text-xs text-[#94A3B8]">
-                <span className="font-bold text-[#38BDF8]">
+              <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-xl bg-white/[0.04] border border-white/5 text-xs text-[#94A3B8]">
+                <span className="font-semibold text-[#F8FAFC]">
                   ₦{Math.round(Number(property.price) / 12).toLocaleString()}
                 </span>
                 <span>/ month approx.</span>
