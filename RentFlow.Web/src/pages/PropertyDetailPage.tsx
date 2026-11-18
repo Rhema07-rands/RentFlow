@@ -19,12 +19,14 @@ import {
   Clock,
   Loader2,
   Send,
-  Sparkles
+  Sparkles,
+  ShieldCheck
 } from 'lucide-react';
 import { API_BASE, getInitials } from '../config/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useCustomAlert } from '../contexts/AlertContext';
 import { useCall } from '../contexts/CallContext';
+import { useChat } from '../contexts/ChatContext';
 import { isVideoMedia, getVideoPoster } from '../utils/media';
 import { AdBanner } from '../components/AdBanner';
 import { ProUpgradeModal } from '../components/ProUpgradeModal';
@@ -36,6 +38,7 @@ export const PropertyDetailPage: React.FC = () => {
   const { user, token } = useAuth();
   const { showAlert } = useCustomAlert();
   const { startCall } = useCall();
+  const { isContactOnline } = useChat();
 
   const [property, setProperty] = useState<any>(location.state?.property || null);
   const [reviews, setReviews] = useState<any[]>([]);
@@ -203,7 +206,7 @@ export const PropertyDetailPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 lg:p-10 max-w-6xl w-full mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
       {/* Top Action Bar */}
       <div className="flex items-center justify-between mb-6">
         <button
@@ -335,10 +338,10 @@ export const PropertyDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* Main Two-Column Desktop Layout */}
-      <div className="grid lg:grid-cols-3 gap-8">
-        {/* Left 2 Columns: Details, Description, Amenities, Reviews */}
-        <div className="lg:col-span-2 space-y-8">
+      {/* Main Responsive Two-Column Layout */}
+      <div className="grid lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Details, Description, Amenities, Reviews */}
+        <div className="lg:col-span-7 xl:col-span-8 space-y-8 min-w-0">
           <div>
             {property.propertyType && (
               <span className="inline-block px-3.5 py-1 rounded-xl bg-[#38BDF8]/10 border border-[#38BDF8]/25 text-[#38BDF8] text-xs font-bold mb-3">
@@ -518,28 +521,60 @@ export const PropertyDetailPage: React.FC = () => {
         </div>
 
         {/* Right Sticky Action Card */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-8 bg-[#1E293B] border border-white/10 rounded-3xl p-6 shadow-2xl space-y-6">
+        <div className="lg:col-span-5 xl:col-span-4 w-full">
+          <div className="sticky top-8 bg-[#1E293B]/90 backdrop-blur-xl border border-white/10 rounded-3xl p-6 sm:p-7 shadow-2xl relative overflow-hidden space-y-6">
+            {/* Top gradient highlight bar */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#38BDF8] via-blue-500 to-[#38BDF8]" />
+
+            {/* Price Header */}
             <div>
-              <span className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">
-                Annual Rent
-              </span>
-              <div className="text-3xl font-extrabold text-[#38BDF8] mt-1">
-                ₦{Number(property.price).toLocaleString()}<span className="text-sm font-normal text-[#94A3B8]">/yr</span>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider">
+                  Annual Rent
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[11px] font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Verified Listing
+                </span>
               </div>
-              <p className="text-xs text-[#94A3B8] mt-1">
-                Approx. ₦{Math.round(Number(property.price) / 12).toLocaleString()}/month
-              </p>
+
+              <div className="flex items-baseline gap-1">
+                <span className="text-3xl sm:text-4xl font-black text-[#F8FAFC] tracking-tight">
+                  <span className="text-[#38BDF8]">₦</span>
+                  {Number(property.price).toLocaleString()}
+                </span>
+                <span className="text-sm font-semibold text-[#94A3B8]">/yr</span>
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 mt-2.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/5 text-xs text-[#94A3B8]">
+                <span className="font-bold text-[#38BDF8]">
+                  ₦{Math.round(Number(property.price) / 12).toLocaleString()}
+                </span>
+                <span>/ month approx.</span>
+              </div>
             </div>
 
-            {/* Landlord Info */}
-            <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-[#0F172A] border border-white/5">
-              <div className="w-12 h-12 rounded-full bg-[#38BDF8]/15 text-[#38BDF8] flex items-center justify-center font-extrabold text-base shrink-0">
-                {getInitials(sellerName)}
+            <div className="h-px bg-white/5" />
+
+            {/* Landlord Info Profile Card */}
+            <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-[#0F172A]/70 border border-white/5 hover:border-white/10 transition-all">
+              <div className="relative shrink-0">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#38BDF8]/20 to-blue-600/30 border border-[#38BDF8]/30 text-[#38BDF8] flex items-center justify-center font-extrabold text-base">
+                  {getInitials(sellerName)}
+                </div>
+                {ownerId && isContactOnline(String(ownerId)) && (
+                  <span
+                    className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#0F172A]"
+                    title="Online Now"
+                  />
+                )}
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold text-[#F8FAFC] truncate">{sellerName}</p>
-                <p className="text-xs text-[#94A3B8]">Listed by Property Owner</p>
+                <div className="flex items-center gap-1 mt-0.5 text-xs text-[#94A3B8]">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#38BDF8] shrink-0" />
+                  <span className="truncate">Property Owner • Verified</span>
+                </div>
               </div>
             </div>
 
@@ -550,37 +585,42 @@ export const PropertyDetailPage: React.FC = () => {
                     state: { property },
                   })
                 }
-                className="w-full py-4 rounded-2xl bg-[#38BDF8]/15 border border-[#38BDF8]/40 text-[#38BDF8] font-extrabold text-base flex items-center justify-center gap-2 hover:bg-[#38BDF8]/25 transition-all"
+                className="w-full py-3.5 px-4 rounded-2xl bg-[#38BDF8]/15 border border-[#38BDF8]/40 text-[#38BDF8] font-extrabold text-sm flex items-center justify-center gap-2 hover:bg-[#38BDF8]/25 transition-all btn-press"
               >
-                <Edit3 className="w-5 h-5" />
+                <Edit3 className="w-4 h-4" />
                 <span>Edit My Listing</span>
               </button>
             ) : (
               <div className="space-y-3">
                 <button
                   onClick={handleContactOwner}
-                  className="w-full py-4 rounded-2xl bg-[#38BDF8] text-[#0F172A] font-extrabold text-base flex items-center justify-center gap-2 shadow-lg shadow-[#38BDF8]/25 hover:bg-[#38BDF8]/90 transition-all duration-200 btn-press"
+                  className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#38BDF8] to-blue-600 hover:from-[#38BDF8]/90 hover:to-blue-500 text-white font-extrabold text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-[#38BDF8]/20 transition-all duration-200 btn-press group"
                 >
-                  <MessageSquare className="w-5 h-5" />
-                  <span>Apply / Chat with Owner</span>
+                  <MessageSquare className="w-5 h-5 shrink-0 group-hover:scale-110 transition-transform" />
+                  <span className="whitespace-nowrap">Apply / Chat with Owner</span>
                 </button>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2.5">
                   <button
                     onClick={() => handleCallOwner('audio')}
-                    className="py-3 rounded-2xl bg-[#0F172A] border border-white/10 hover:border-[#38BDF8] text-[#F8FAFC] font-bold text-xs flex items-center justify-center gap-2 transition-all duration-200 btn-press hover:bg-white/5"
+                    className="py-3 px-3 rounded-2xl bg-[#0F172A] border border-white/10 hover:border-[#38BDF8]/50 hover:bg-[#38BDF8]/5 text-[#F8FAFC] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all duration-200 btn-press whitespace-nowrap"
                   >
-                    <Phone className="w-4 h-4 text-[#38BDF8]" />
+                    <Phone className="w-4 h-4 text-[#38BDF8] shrink-0" />
                     <span>Audio Call</span>
                   </button>
 
                   <button
                     onClick={() => handleCallOwner('video')}
-                    className="py-3 rounded-2xl bg-[#0F172A] border border-white/10 hover:border-[#38BDF8] text-[#F8FAFC] font-bold text-xs flex items-center justify-center gap-2 transition-all duration-200 btn-press hover:bg-white/5"
+                    className="py-3 px-3 rounded-2xl bg-[#0F172A] border border-white/10 hover:border-[#38BDF8]/50 hover:bg-[#38BDF8]/5 text-[#F8FAFC] font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all duration-200 btn-press whitespace-nowrap"
                   >
-                    <Video className="w-4 h-4 text-[#38BDF8]" />
+                    <Video className="w-4 h-4 text-[#38BDF8] shrink-0" />
                     <span>Video Tour</span>
                   </button>
+                </div>
+
+                <div className="pt-1 flex items-center justify-center gap-1.5 text-[11px] text-[#64748B]">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>Direct landlord contact • No broker fees</span>
                 </div>
               </div>
             )}
