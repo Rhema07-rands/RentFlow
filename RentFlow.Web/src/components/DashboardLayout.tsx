@@ -16,6 +16,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useChat } from '../contexts/ChatContext';
 import { getInitials } from '../config/api';
+import { RentFlowLogo } from './RentFlowLogo';
 
 export const DashboardLayout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -47,15 +48,9 @@ export const DashboardLayout: React.FC = () => {
         {/* Brand Logo */}
         <div
           onClick={() => navigate('/dashboard/explore')}
-          className="flex items-center gap-3.5 px-6 py-6 border-b border-white/5 cursor-pointer group"
+          className="px-6 py-6 border-b border-white/5 cursor-pointer group"
         >
-          <div className="w-11 h-11 rounded-2xl bg-[#38BDF8] flex items-center justify-center shadow-lg shadow-[#38BDF8]/30 group-hover:scale-105 group-hover:rotate-[-2deg] transition-all duration-300">
-            <Home className="w-6 h-6 text-[#0F172A]" />
-          </div>
-          <div>
-            <h1 className="text-xl font-extrabold tracking-tight text-[#F8FAFC] group-hover:text-[#38BDF8] transition-colors">RentFlow</h1>
-            <p className="text-xs text-[#94A3B8] font-medium">Property & Chat Portal</p>
-          </div>
+          <RentFlowLogo size="md" withText />
         </div>
 
         {/* Navigation Links */}

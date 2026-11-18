@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="rf-bg-grad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
+    <linearGradient id="rf-ribbon-1" x1="14" y1="14" x2="50" y2="50" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="50%" stop-color="#0EA5E9"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="rf-ribbon-2" x1="50" y1="18" x2="16" y2="52" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7DD3FC"/>
+      <stop offset="100%" stop-color="#38BDF8"/>
+    </linearGradient>
+    <filter id="rf-glow" x="0" y="0" width="64" height="64" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Modern Rounded Squircle Container -->
+  <rect width="64" height="64" rx="18" fill="url(#rf-bg-grad)"/>
+  <rect x="1" y="1" width="62" height="62" rx="17" stroke="#38BDF8" stroke-opacity="0.3" stroke-width="1.5"/>
+
+  <!-- Architectural Roof Crest (Rent) -->
+  <path d="M16 29L32 17L48 29" stroke="url(#rf-ribbon-2)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Fluid Infinity Flow Loop (Flow + Chat Connection) -->
+  <path d="M22 36C22 30.4772 26.4772 26 32 26C37.5228 26 42 30.4772 42 36C42 41.5228 37.5228 46 32 46C26 46 22 42 22 37" stroke="url(#rf-ribbon-1)" stroke-width="4.5" stroke-linecap="round"/>
+
+  <!-- Dynamic Fluid Crossbar -->
+  <path d="M30 36H44" stroke="#7DD3FC" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- Core Radiant Aperture -->
+  <circle cx="32" cy="36" r="2.8" fill="#FFFFFF"/>
+</svg>

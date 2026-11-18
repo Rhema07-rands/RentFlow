@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Home, ShieldCheck, MessageSquare, Video, Sparkles, ArrowRight, Building2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { RentFlowLogo } from '../components/RentFlowLogo';
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -15,11 +16,8 @@ export const LandingPage: React.FC = () => {
 
       {/* Top Navigation */}
       <header className="relative z-10 max-w-7xl w-full mx-auto px-6 py-6 flex items-center justify-between animate-fade-in-down">
-        <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/')}>
-          <div className="w-12 h-12 rounded-2xl bg-[#38BDF8] flex items-center justify-center shadow-lg shadow-[#38BDF8]/30 group-hover:scale-105 group-hover:rotate-[-2deg] transition-all duration-300">
-            <Home className="w-6 h-6 text-[#0F172A]" />
-          </div>
-          <span className="text-2xl font-extrabold tracking-tight text-[#F8FAFC] group-hover:text-[#38BDF8] transition-colors">RentFlow</span>
+        <div className="cursor-pointer group" onClick={() => navigate('/')}>
+          <RentFlowLogo size="lg" withText subtitle="" />
         </div>
 
         <div className="flex items-center gap-3">
