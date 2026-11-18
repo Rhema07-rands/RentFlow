@@ -1,5 +1,7 @@
 import {
+  ArrowDownLeft,
   ArrowLeft,
+  ArrowUpRight,
   Check,
   CheckCheck,
   Download,
@@ -40,6 +42,15 @@ const formatDateLabel = (dateStr: string) => {
 const formatTimeLabel = (dateStr: string) => {
   const date = new Date(dateStr);
   return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+};
+
+const formatCallDuration = (seconds?: number) => {
+  if (!seconds || seconds <= 0) return '';
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  if (mins === 0) return `${secs}s`;
+  if (secs === 0) return `${mins}m`;
+  return `${mins}m ${secs}s`;
 };
 
 export const ChatsPage: React.FC = () => {
@@ -286,6 +297,91 @@ export const ChatsPage: React.FC = () => {
       );
     }
 
+    if (msg.messageType === 'call_log' || msg.messageType === 'call') {
+      let callData: { callType?: 'audio' | 'video'; status?: 'completed' | 'missed'; duration?: number } = {};
+      try {
+        callData = JSON.parse(msg.content);
+      } catch {
+        callData = { callType: 'audio', status: 'completed', duration: 0 };
+      }
+
+      const isAudio = callData.callType !== 'video';
+      const isMissed = callData.status === 'missed' && !isMe;
+      const isCancelled = callData.status === 'missed' && isMe;
+
+      return (
+        <div className="flex items-center gap-3 py-1 min-w-[210px] sm:min-w-[250px]">
+          <div
+            className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+              isMissed
+                ? 'bg-red-500/20 text-red-400'
+                : isMe
+                ? 'bg-white/20 text-white'
+                : 'bg-[#38BDF8]/15 text-[#38BDF8]'
+            }`}
+          >
+            {isAudio ? <Phone className="w-5 h-5" /> : <Video className="w-5 h-5" />}
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <p
+              className={`text-sm font-bold truncate ${
+                isMissed ? 'text-red-400' : isMe ? 'text-white' : 'text-[#F8FAFC]'
+              }`}
+            >
+              {isMissed
+                ? `Missed ${isAudio ? 'voice' : 'video'} call`
+                : isCancelled
+                ? `${isAudio ? 'Voice' : 'Video'} call (Cancelled)`
+                : `${isMe ? 'Outgoing' : 'Incoming'} ${isAudio ? 'voice' : 'video'} call`}
+            </p>
+            <div className="flex items-center gap-1.5 text-xs mt-0.5">
+              {isMissed ? (
+                <span className="text-red-400/90 text-[11px] font-semibold flex items-center gap-1">
+                  <ArrowDownLeft className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                  Tap to call back
+                </span>
+              ) : (
+                <span
+                  className={`text-[11px] flex items-center gap-1 ${
+                    isMe ? 'text-blue-100' : 'text-[#94A3B8]'
+                  }`}
+                >
+                  {isMe ? (
+                    <ArrowUpRight className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
+                  ) : (
+                    <ArrowDownLeft className="w-3.5 h-3.5 text-[#38BDF8] shrink-0" />
+                  )}
+                  {callData.duration ? formatCallDuration(callData.duration) : isCancelled ? 'No answer' : 'Connected'}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Call Back Button (WhatsApp style) */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              const targetId = isMe ? msg.receiverId : msg.senderId;
+              const targetName = isMe ? displayName : (msg.senderName || displayName);
+              startCall(targetId, targetName, isAudio ? 'audio' : 'video');
+            }}
+            className={`p-2 rounded-xl transition-all btn-press shrink-0 ${
+              isMissed
+                ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30'
+                : isMe
+                ? 'bg-white/15 text-white hover:bg-white/25'
+                : 'bg-[#38BDF8]/15 text-[#38BDF8] hover:bg-[#38BDF8]/25'
+            }`}
+            title={isAudio ? 'Audio Call back' : 'Video Call back'}
+          >
+            {isAudio ? <Phone className="w-4 h-4" /> : <Video className="w-4 h-4" />}
+          </button>
+        </div>
+      );
+    }
+
     return <p className="text-sm sm:text-[15px] leading-relaxed break-words">{msg.content}</p>;
   };
 
@@ -349,6 +445,22 @@ export const ChatsPage: React.FC = () => {
               if (chat.latestMessage?.messageType === 'image') preview = '📷 Photo';
               else if (chat.latestMessage?.messageType === 'document') preview = '📄 Document';
               else if (chat.latestMessage?.messageType === 'voice') preview = '🎤 Voice Note';
+              else if (
+                chat.latestMessage?.messageType === 'call_log' ||
+                chat.latestMessage?.messageType === 'call'
+              ) {
+                try {
+                  const callData = JSON.parse(chat.latestMessage.content);
+                  const isAudio = callData.callType !== 'video';
+                  if (callData.status === 'missed') {
+                    preview = isAudio ? '📞 Missed audio call' : '📹 Missed video call';
+                  } else {
+                    preview = isAudio ? '📞 Audio call' : '📹 Video call';
+                  }
+                } catch {
+                  preview = '📞 Call';
+                }
+              }
 
               return (
                 <div
@@ -511,6 +623,8 @@ export const ChatsPage: React.FC = () => {
                           className={`max-w-[78%] sm:max-w-[65%] px-4 py-2.5 rounded-2xl shadow-md ${
                             isMe
                               ? 'bg-blue-600 text-white rounded-br-sm'
+                              : msg.messageType === 'call_log' && msg.content.includes('"missed"')
+                              ? 'bg-[#1E293B] text-[#F8FAFC] rounded-bl-sm border border-red-500/30'
                               : 'bg-[#1E293B] text-[#F8FAFC] rounded-bl-sm border border-white/5'
                           }`}
                         >

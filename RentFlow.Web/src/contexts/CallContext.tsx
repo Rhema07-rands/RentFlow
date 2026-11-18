@@ -3,6 +3,7 @@ import * as signalR from '@microsoft/signalr';
 import { API_BASE } from '../config/api';
 import { useAuth } from './AuthContext';
 import { useCustomAlert } from './AlertContext';
+import { useChat } from './ChatContext';
 
 export type CallState = 'idle' | 'calling' | 'ringing' | 'connected' | 'ended';
 export type CallType = 'audio' | 'video';
@@ -75,6 +76,7 @@ const ICE_SERVERS: RTCConfiguration = {
 export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { token, user } = useAuth();
   const { showAlert } = useCustomAlert();
+  const { sendMessage } = useChat();
 
   const [callState, setCallState] = useState<CallState>('idle');
   const [callType, setCallType] = useState<CallType>('audio');
@@ -126,8 +128,30 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const remoteUserRef = useRef<string | null>(null);
+  const callerNameRef = useRef<string | null>(null);
+  const isCallerRef = useRef<boolean>(false);
+  const callDurationRef = useRef<number>(0);
+  const callLogLoggedRef = useRef<boolean>(false);
   const callTypeRef = useRef<CallType>('audio');
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const recordCallMessage = useCallback(
+    (targetId: string, contactName: string | null, type: CallType, duration: number, isMissed: boolean) => {
+      if (!isCallerRef.current || callLogLoggedRef.current || !targetId) return;
+      callLogLoggedRef.current = true;
+
+      const payload = JSON.stringify({
+        callType: type,
+        status: isMissed ? 'missed' : 'completed',
+        duration,
+      });
+
+      sendMessage(targetId, payload, 'call_log', contactName || 'RentFlow Contact').catch((err) =>
+        console.error('Failed to post call log to chat', err)
+      );
+    },
+    [sendMessage]
+  );
 
   const addHistoryLog = useCallback((log: Omit<CallLogItem, 'id' | 'time'>) => {
     if (!user?.id) return;
@@ -230,7 +254,11 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     connection.on('IncomingCall', (callerId: string, incomingName: string, incomingCallType: string = 'audio') => {
       const cType: CallType = incomingCallType === 'video' ? 'video' : 'audio';
       remoteUserRef.current = callerId;
+      callerNameRef.current = incomingName || 'RentFlow User';
       callTypeRef.current = cType;
+      isCallerRef.current = false;
+      callDurationRef.current = 0;
+      callLogLoggedRef.current = false;
       setRemoteUserId(callerId);
       setCallerName(incomingName || 'RentFlow User');
       setCallType(cType);
@@ -241,9 +269,14 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     connection.on('CallAccepted', async (responderId: string) => {
       setCallState('connected');
       setCallDuration(0);
+      callDurationRef.current = 0;
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {
-        setCallDuration(prev => prev + 1);
+        setCallDuration(prev => {
+          const next = prev + 1;
+          callDurationRef.current = next;
+          return next;
+        });
       }, 1000);
 
       // Caller initiates WebRTC Offer
@@ -290,6 +323,16 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     connection.on('CallEnded', () => {
+      if (remoteUserRef.current) {
+        const isMissed = callDurationRef.current === 0;
+        recordCallMessage(
+          remoteUserRef.current,
+          callerNameRef.current,
+          callTypeRef.current,
+          callDurationRef.current,
+          isMissed
+        );
+      }
       cleanupMedia();
       setCallState('ended');
       setTimeout(() => {
@@ -308,11 +351,15 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       connection.stop();
       hubRef.current = null;
     };
-  }, [token, user, cleanupMedia, createPeerConnection]);
+  }, [token, user, cleanupMedia, createPeerConnection, recordCallMessage]);
 
   const startCall = async (targetUserId: string, targetName: string, type: CallType = 'audio') => {
     remoteUserRef.current = targetUserId;
+    callerNameRef.current = targetName;
     callTypeRef.current = type;
+    isCallerRef.current = true;
+    callDurationRef.current = 0;
+    callLogLoggedRef.current = false;
     setRemoteUserId(targetUserId);
     setCallerName(targetName);
     setCallType(type);
@@ -345,9 +392,14 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setCallState('connected');
     setCallDuration(0);
+    callDurationRef.current = 0;
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
-      setCallDuration(prev => prev + 1);
+      setCallDuration(prev => {
+        const next = prev + 1;
+        callDurationRef.current = next;
+        return next;
+      });
     }, 1000);
 
     addHistoryLog({
@@ -367,8 +419,18 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const endCall = () => {
-    if (remoteUserRef.current && hubRef.current?.state === signalR.HubConnectionState.Connected) {
-      hubRef.current.invoke('EndCall', remoteUserRef.current).catch(console.error);
+    if (remoteUserRef.current) {
+      if (hubRef.current?.state === signalR.HubConnectionState.Connected) {
+        hubRef.current.invoke('EndCall', remoteUserRef.current).catch(console.error);
+      }
+      const isMissed = callDurationRef.current === 0;
+      recordCallMessage(
+        remoteUserRef.current,
+        callerNameRef.current,
+        callTypeRef.current,
+        callDurationRef.current,
+        isMissed
+      );
     }
     cleanupMedia();
     setCallState('ended');
