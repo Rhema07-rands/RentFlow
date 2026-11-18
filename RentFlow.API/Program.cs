@@ -132,6 +132,7 @@ _ = Task.Run(async () =>
             ALTER TABLE Users ADD COLUMN IF NOT EXISTS SubscriptionExpiresAt DATETIME NULL;
             ALTER TABLE ChatMessages ADD COLUMN IF NOT EXISTS IsDelivered TINYINT(1) DEFAULT 0;
             DELETE FROM Properties WHERE Title = 'Booty' AND Description = 'Ghhjlk>';
+            DELETE r FROM Reviews r INNER JOIN Properties p ON r.PropertyId = p.Id WHERE r.ReviewerId = p.OwnerId;
         ");
     }
     catch

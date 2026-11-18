@@ -59,13 +59,13 @@ namespace RentFlow.API.Controllers
             return Ok(new { Message = "Review submitted successfully." });
         }
 
-        // GET /api/reviews/property/{propertyId} — Get all reviews for a specific property
+        // GET /api/reviews/property/{propertyId} — Get all reviews for a specific property (excluding owner self-reviews)
         [HttpGet("property/{propertyId}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetPropertyReviews(int propertyId)
         {
             var reviews = await _context.Reviews
-                .Where(r => r.PropertyId == propertyId)
+                .Where(r => r.PropertyId == propertyId && (r.Property == null || r.ReviewerId != r.Property.OwnerId))
                 .Include(r => r.Reviewer)
                 .OrderByDescending(r => r.CreatedAt)
                 .Select(r => new {
