@@ -70,34 +70,7 @@ const ICE_SERVERS: RTCConfiguration = {
   ],
 };
 
-const DEFAULT_CALL_LOGS: CallLogItem[] = [
-  {
-    id: '1',
-    contactId: '00000000-0000-0000-0000-000000000001',
-    name: 'Adeola Properties',
-    type: 'incoming',
-    callType: 'audio',
-    time: 'Yesterday, 2:15 PM',
-    duration: 145,
-  },
-  {
-    id: '2',
-    contactId: '00000000-0000-0000-0000-000000000003',
-    name: 'Lagos Luxury Living',
-    type: 'outgoing',
-    callType: 'video',
-    time: 'Oct 21, 4:30 PM',
-    duration: 312,
-  },
-  {
-    id: '3',
-    contactId: '00000000-0000-0000-0000-000000000002',
-    name: 'ChiChi Homes',
-    type: 'missed',
-    callType: 'audio',
-    time: 'Oct 19, 11:10 AM',
-  },
-];
+
 
 export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { token, user } = useAuth();
@@ -116,9 +89,9 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [callHistory, setCallHistory] = useState<CallLogItem[]>(() => {
     try {
       const saved = localStorage.getItem('rf_call_history');
-      return saved ? JSON.parse(saved) : DEFAULT_CALL_LOGS;
+      return saved ? JSON.parse(saved) : [];
     } catch {
-      return DEFAULT_CALL_LOGS;
+      return [];
     }
   });
 
