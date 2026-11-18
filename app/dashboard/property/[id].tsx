@@ -96,6 +96,10 @@ export default function PropertyDetailScreen() {
       showAlert('Not Logged In', 'Please log in to leave a review.');
       return;
     }
+    if (isOwnProperty) {
+      showAlert('Restricted', 'Property owners cannot review their own property.');
+      return;
+    }
     if (!newReviewText.trim()) {
       showAlert('Empty Review', 'Please write something before submitting.');
       return;
@@ -313,17 +317,19 @@ export default function PropertyDetailScreen() {
                   <Text style={styles.reviewSummary}>{avgRating} · {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}</Text>
                 </View>
               </View>
-              <TouchableOpacity 
-                style={styles.addReviewBtn} 
-                onPress={() => setShowReviewForm(!showReviewForm)}
-              >
-                <Ionicons name={showReviewForm ? "close" : "create-outline"} size={18} color="#38BDF8" />
-                <Text style={styles.addReviewText}>{showReviewForm ? 'Cancel' : 'Write'}</Text>
-              </TouchableOpacity>
+              {!isOwnProperty && (
+                <TouchableOpacity 
+                  style={styles.addReviewBtn} 
+                  onPress={() => setShowReviewForm(!showReviewForm)}
+                >
+                  <Ionicons name={showReviewForm ? "close" : "create-outline"} size={18} color="#38BDF8" />
+                  <Text style={styles.addReviewText}>{showReviewForm ? 'Cancel' : 'Write'}</Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             {/* Add Review Form */}
-            {showReviewForm && (
+            {showReviewForm && !isOwnProperty && (
               <View style={styles.reviewForm}>
                 <Text style={styles.reviewFormLabel}>Your Rating</Text>
                 {renderSelectableStars()}

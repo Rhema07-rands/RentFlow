@@ -135,6 +135,10 @@ export const PropertyDetailPage: React.FC = () => {
       showAlert('Not Logged In', 'Please log in to leave a review.');
       return;
     }
+    if (isOwnProperty) {
+      showAlert('Restricted', 'Property owners cannot review their own property.');
+      return;
+    }
     if (!newReviewText.trim()) {
       showAlert('Empty Review', 'Please write your experience before submitting.');
       return;
@@ -423,15 +427,17 @@ export const PropertyDetailPage: React.FC = () => {
                 </div>
               </div>
 
-              <button
-                onClick={() => setShowReviewForm(!showReviewForm)}
-                className="px-4 py-2 rounded-xl bg-[#38BDF8]/10 border border-[#38BDF8]/25 text-[#38BDF8] text-xs font-bold hover:bg-[#38BDF8]/20 transition-all"
-              >
-                {showReviewForm ? 'Cancel' : 'Write a Review'}
-              </button>
+              {!isOwnProperty && (
+                <button
+                  onClick={() => setShowReviewForm(!showReviewForm)}
+                  className="px-4 py-2 rounded-xl bg-[#38BDF8]/10 border border-[#38BDF8]/25 text-[#38BDF8] text-xs font-bold hover:bg-[#38BDF8]/20 transition-all"
+                >
+                  {showReviewForm ? 'Cancel' : 'Write a Review'}
+                </button>
+              )}
             </div>
 
-            {showReviewForm && (
+            {showReviewForm && !isOwnProperty && (
               <form
                 onSubmit={submitReview}
                 className="bg-[#0F172A] border border-white/10 rounded-2xl p-5 mb-6 space-y-4"

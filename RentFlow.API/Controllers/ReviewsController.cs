@@ -28,10 +28,14 @@ namespace RentFlow.API.Controllers
             if (!Guid.TryParse(userIdStr, out Guid userId))
                 return Unauthorized();
 
-            //  Verify the property exists
+            // Verify the property exists
             var property = await _context.Properties.FindAsync(dto.PropertyId);
             if (property == null)
                 return NotFound("Property not found.");
+
+            // Prevent property owner from reviewing their own property
+            if (property.OwnerId == userId)
+                return BadRequest("Property owners cannot review their own property.");
 
             // Step 3: Check if user already reviewed this property (one review per property per user)
             var existingReview = await _context.Reviews
