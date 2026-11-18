@@ -150,7 +150,7 @@ export const AddPropertyPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 lg:p-10 max-w-4xl w-full mx-auto">
+    <div className="p-4 sm:p-6 lg:p-10 max-w-4xl w-full mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold text-[#F8FAFC] tracking-tight">List a Property</h1>
         <p className="text-sm text-[#94A3B8] mt-1">
@@ -160,9 +160,9 @@ export const AddPropertyPage: React.FC = () => {
 
       <form onSubmit={handlePublish} className="space-y-8">
         {/* Photos & Videos Section */}
-        <section className="bg-[#1E293B] border border-white/5 rounded-3xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-[#F8FAFC]">Property Photos & Videos</h2>
+        <section className="bg-[#1E293B] border border-white/5 rounded-3xl p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-4">
+            <h2 className="text-base sm:text-lg font-bold text-[#F8FAFC]">Property Photos & Videos</h2>
             <span className="text-xs text-[#94A3B8]">Supports Photos & Video Tours</span>
           </div>
 
@@ -224,16 +224,18 @@ export const AddPropertyPage: React.FC = () => {
 
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="h-44 rounded-2xl bg-[#0F172A] border-2 border-dashed border-[#38BDF8]/30 hover:border-[#38BDF8] flex flex-col items-center justify-center cursor-pointer transition-all group"
+            className="min-h-44 py-6 px-4 rounded-2xl bg-[#0F172A] border-2 border-dashed border-[#38BDF8]/30 hover:border-[#38BDF8] flex flex-col items-center justify-center text-center cursor-pointer transition-all group"
           >
             <div className="flex items-center gap-2 mb-2">
               <Camera className="w-8 h-8 text-[#38BDF8] group-hover:scale-110 transition-transform" />
               <Video className="w-8 h-8 text-[#38BDF8] group-hover:scale-110 transition-transform" />
             </div>
-            <span className="text-[#38BDF8] font-bold text-base">Click to upload photos or videos</span>
-            <span className="text-xs text-[#64748B] mt-1">
-              Add up to 10 high-resolution photos or video walkthroughs (JPG, PNG, MP4, WebM)
+            <span className="text-[#38BDF8] font-bold text-sm sm:text-base text-center">
+              Click to upload photos or videos
             </span>
+            <p className="text-xs text-[#64748B] mt-1.5 text-center max-w-xs sm:max-w-md px-2 leading-relaxed">
+              Add up to 10 high-resolution photos or video walkthroughs (JPG, PNG, MP4, WebM)
+            </p>
           </div>
 
           <input
@@ -254,7 +256,7 @@ export const AddPropertyPage: React.FC = () => {
         </section>
 
         {/* Property Type */}
-        <section className="bg-[#1E293B] border border-white/5 rounded-3xl p-6">
+        <section className="bg-[#1E293B] border border-white/5 rounded-3xl p-4 sm:p-6">
           <h2 className="text-lg font-bold text-[#F8FAFC] mb-4">Property Type</h2>
           <div className="flex flex-wrap gap-2.5">
             {typesList.map((type) => (
@@ -275,7 +277,7 @@ export const AddPropertyPage: React.FC = () => {
         </section>
 
         {/* Details */}
-        <section className="bg-[#1E293B] border border-white/5 rounded-3xl p-6 space-y-5">
+        <section className="bg-[#1E293B] border border-white/5 rounded-3xl p-4 sm:p-6 space-y-5">
           <h2 className="text-lg font-bold text-[#F8FAFC]">Property Details</h2>
 
           <div className="grid sm:grid-cols-2 gap-5">
@@ -364,7 +366,7 @@ export const AddPropertyPage: React.FC = () => {
         </section>
 
         {/* Amenities */}
-        <section className="bg-[#1E293B] border border-white/5 rounded-3xl p-6">
+        <section className="bg-[#1E293B] border border-white/5 rounded-3xl p-4 sm:p-6">
           <h2 className="text-lg font-bold text-[#F8FAFC] mb-4">Amenities</h2>
           <div className="flex flex-wrap gap-3">
             {AMENITY_OPTIONS.map((amenity) => {
