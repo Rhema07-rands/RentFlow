@@ -11,6 +11,7 @@ export interface ChatMessage {
   messageType: string; // 'text' | 'image' | 'document' | 'voice'
   timestamp: string;
   isRead: boolean;
+  isDelivered: boolean;
   senderName?: string;
   senderAvatar?: string;
 }
@@ -28,12 +29,15 @@ interface ChatContextType {
   messages: ChatMessage[];
   activeContactId: string | null;
   isConnected: boolean;
+  onlineContacts: Set<string>;
+  isContactOnline: (contactId: string) => boolean;
   loadConversations: (token: string) => Promise<void>;
   loadHistory: (token: string, contactId: string) => Promise<void>;
   sendMessage: (receiverId: string, content: string, messageType?: string, contactName?: string) => Promise<void>;
   uploadAttachment: (file: File | Blob, filename?: string) => Promise<string | null>;
   connect: (token: string) => Promise<void>;
   disconnect: () => Promise<void>;
+  markAsRead: (contactId: string) => Promise<void>;
 }
 
 const ChatContext = createContext<ChatContextType>({
@@ -41,12 +45,15 @@ const ChatContext = createContext<ChatContextType>({
   messages: [],
   activeContactId: null,
   isConnected: false,
+  onlineContacts: new Set(),
+  isContactOnline: () => false,
   loadConversations: async () => {},
   loadHistory: async () => {},
   sendMessage: async () => {},
   uploadAttachment: async () => null,
   connect: async () => {},
   disconnect: async () => {},
+  markAsRead: async () => {},
 });
 
 export const useChat = () => useContext(ChatContext);
@@ -57,6 +64,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [onlineContacts, setOnlineContacts] = useState<Set<string>>(new Set());
 
   const hubRef = useRef<signalR.HubConnection | null>(null);
   const activeContactRef = useRef<string | null>(null);
@@ -75,127 +83,255 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     tokenRef.current = token;
   }, [token]);
 
-  const loadConversations = useCallback(async (authToken: string) => {
-    if (!authToken) return;
+  const isContactOnline = useCallback(
+    (contactId: string): boolean => {
+      if (!contactId) return false;
+      return onlineContacts.has(contactId.toLowerCase());
+    },
+    [onlineContacts]
+  );
+
+  const queryOnlineUsers = useCallback(async (connection: signalR.HubConnection, ids: string[]) => {
+    if (!ids || ids.length === 0) return;
     try {
-      const res = await fetch(`${API_BASE}/api/chat/conversations`, {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setConversations(data);
+      const onlineIds: string[] = await connection.invoke('GetOnlineUsers', ids);
+      if (onlineIds && Array.isArray(onlineIds)) {
+        setOnlineContacts((prev) => {
+          const next = new Set(prev);
+          onlineIds.forEach((id) => next.add(id.toLowerCase()));
+          return next;
+        });
       }
-    } catch (e) {
-      console.error('Failed to load conversations', e);
+    } catch {
+      // Ignore if hub is not ready
     }
   }, []);
 
-  const connect = useCallback(async (authToken: string) => {
-    if (!authToken || hubRef.current) return;
+  const loadConversations = useCallback(
+    async (authToken: string) => {
+      if (!authToken) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/chat/conversations`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+        if (res.ok) {
+          const data: ConversationInfo[] = await res.json();
+          setConversations(data);
 
-    const connection = new signalR.HubConnectionBuilder()
-      .withUrl(`${API_BASE}/chathub`, {
-        accessTokenFactory: () => authToken,
-      })
-      .withAutomaticReconnect()
-      .build();
-
-    connection.on('ReceiveMessage', (message: ChatMessage, senderName?: string, senderAvatar?: string) => {
-      const currentContact = activeContactRef.current;
-      const currentUser = userRef.current;
-
-      setMessages(prev => {
-        if (
-          currentContact &&
-          (message.senderId.toLowerCase() === currentContact.toLowerCase() ||
-            message.receiverId.toLowerCase() === currentContact.toLowerCase())
-        ) {
-          // If this message already exists by real DB ID, do not add duplicate
-          if (prev.some(m => m.id === message.id)) {
-            return prev;
+          if (hubRef.current && hubRef.current.state === signalR.HubConnectionState.Connected) {
+            const ids = data.map((c) => c.contactId);
+            queryOnlineUsers(hubRef.current, ids);
           }
-
-          // If this is our own message returning from the server, replace any matching optimistic message
-          const optimisticIndex = prev.findIndex(
-            m =>
-              m.id.startsWith('opt_') &&
-              m.senderId.toLowerCase() === message.senderId.toLowerCase() &&
-              m.receiverId.toLowerCase() === message.receiverId.toLowerCase() &&
-              m.content === message.content
-          );
-
-          if (optimisticIndex !== -1) {
-            const updated = [...prev];
-            updated[optimisticIndex] = message;
-            return updated;
-          }
-
-          return [...prev, message];
         }
-        return prev;
-      });
+      } catch (e) {
+        console.error('Failed to load conversations', e);
+      }
+    },
+    [queryOnlineUsers]
+  );
 
-      setConversations(prev => {
-        const isMyMessage = Boolean(currentUser && message.senderId.toLowerCase() === currentUser.id.toLowerCase());
-        const otherId = isMyMessage ? message.receiverId : message.senderId;
-        const exists = prev.some(c => c.contactId.toLowerCase() === otherId.toLowerCase());
-        const resolvedSenderName = senderName || message.senderName;
-        const resolvedSenderAvatar = senderAvatar || message.senderAvatar;
-
-        if (exists) {
-          const updated = prev.map(c =>
-            c.contactId.toLowerCase() === otherId.toLowerCase()
-              ? {
-                  ...c,
-                  contactName: !isMyMessage && resolvedSenderName ? resolvedSenderName : c.contactName,
-                  contactAvatar: !isMyMessage && resolvedSenderAvatar ? resolvedSenderAvatar : c.contactAvatar,
-                  latestMessage: message,
-                  unreadCount:
-                    currentContact?.toLowerCase() !== otherId.toLowerCase() && !isMyMessage
-                      ? c.unreadCount + 1
-                      : c.unreadCount,
-                }
-              : c
-          );
-          return updated.sort((a, b) => {
-            const tA = a.latestMessage ? new Date(a.latestMessage.timestamp).getTime() : 0;
-            const tB = b.latestMessage ? new Date(b.latestMessage.timestamp).getTime() : 0;
-            return tB - tA;
-          });
-        } else {
-          // Immediately insert new conversation card into list with actual contact/sender name
-          const newConv: ConversationInfo = {
-            contactId: otherId,
-            contactName: !isMyMessage && resolvedSenderName ? resolvedSenderName : 'RentFlow Contact',
-            contactAvatar: !isMyMessage ? resolvedSenderAvatar : undefined,
-            latestMessage: message,
-            unreadCount: currentContact?.toLowerCase() !== otherId.toLowerCase() && !isMyMessage ? 1 : 0,
-          };
-          if (tokenRef.current) {
-            loadConversations(tokenRef.current);
-          }
-          return [newConv, ...prev];
-        }
-      });
-    });
-
-    connection.onreconnected(() => setIsConnected(true));
-    connection.onclose(() => setIsConnected(false));
-
-    try {
-      await connection.start();
-      hubRef.current = connection;
-      setIsConnected(true);
-    } catch (e) {
-      console.error('SignalR ChatHub Connection Error:', e);
+  const markAsRead = useCallback(async (contactId: string) => {
+    if (!contactId) return;
+    if (hubRef.current && hubRef.current.state === signalR.HubConnectionState.Connected) {
+      try {
+        await hubRef.current.invoke('MarkMessagesAsRead', contactId);
+      } catch (e) {
+        console.error('Failed to mark messages as read', e);
+      }
     }
-  }, [loadConversations]);
+  }, []);
+
+  const connect = useCallback(
+    async (authToken: string) => {
+      if (!authToken || hubRef.current) return;
+
+      const connection = new signalR.HubConnectionBuilder()
+        .withUrl(`${API_BASE}/chathub`, {
+          accessTokenFactory: () => authToken,
+        })
+        .withAutomaticReconnect()
+        .build();
+
+      // --- ReceiveMessage handler ---
+      connection.on(
+        'ReceiveMessage',
+        (message: ChatMessage, senderName?: string, senderAvatar?: string) => {
+          const currentContact = activeContactRef.current;
+          const currentUser = userRef.current;
+
+          // If we are actively viewing this conversation and receive a message from the contact,
+          // instantly mark as read on the server so the sender gets blue checks
+          if (
+            currentContact &&
+            message.senderId.toLowerCase() === currentContact.toLowerCase()
+          ) {
+            message.isRead = true;
+            message.isDelivered = true;
+            connection.invoke('MarkMessagesAsRead', currentContact).catch(() => {});
+          }
+
+          setMessages((prev) => {
+            if (
+              currentContact &&
+              (message.senderId.toLowerCase() === currentContact.toLowerCase() ||
+                message.receiverId.toLowerCase() === currentContact.toLowerCase())
+            ) {
+              if (prev.some((m) => m.id.toLowerCase() === message.id.toLowerCase())) {
+                return prev;
+              }
+
+              const optimisticIndex = prev.findIndex(
+                (m) =>
+                  m.id.startsWith('opt_') &&
+                  m.senderId.toLowerCase() === message.senderId.toLowerCase() &&
+                  m.receiverId.toLowerCase() === message.receiverId.toLowerCase() &&
+                  m.content === message.content
+              );
+
+              if (optimisticIndex !== -1) {
+                const updated = [...prev];
+                updated[optimisticIndex] = message;
+                return updated;
+              }
+
+              return [...prev, message];
+            }
+            return prev;
+          });
+
+          setConversations((prev) => {
+            const isMyMessage = Boolean(
+              currentUser && message.senderId.toLowerCase() === currentUser.id.toLowerCase()
+            );
+            const otherId = isMyMessage ? message.receiverId : message.senderId;
+            const exists = prev.some((c) => c.contactId.toLowerCase() === otherId.toLowerCase());
+            const resolvedSenderName = senderName || message.senderName;
+            const resolvedSenderAvatar = senderAvatar || message.senderAvatar;
+
+            if (exists) {
+              const updated = prev.map((c) =>
+                c.contactId.toLowerCase() === otherId.toLowerCase()
+                  ? {
+                      ...c,
+                      contactName: !isMyMessage && resolvedSenderName ? resolvedSenderName : c.contactName,
+                      contactAvatar: !isMyMessage && resolvedSenderAvatar ? resolvedSenderAvatar : c.contactAvatar,
+                      latestMessage: message,
+                      unreadCount:
+                        currentContact?.toLowerCase() !== otherId.toLowerCase() && !isMyMessage
+                          ? c.unreadCount + 1
+                          : c.unreadCount,
+                    }
+                  : c
+              );
+              return updated.sort((a, b) => {
+                const tA = a.latestMessage ? new Date(a.latestMessage.timestamp).getTime() : 0;
+                const tB = b.latestMessage ? new Date(b.latestMessage.timestamp).getTime() : 0;
+                return tB - tA;
+              });
+            } else {
+              const newConv: ConversationInfo = {
+                contactId: otherId,
+                contactName: !isMyMessage && resolvedSenderName ? resolvedSenderName : 'RentFlow Contact',
+                contactAvatar: !isMyMessage ? resolvedSenderAvatar : undefined,
+                latestMessage: message,
+                unreadCount: currentContact?.toLowerCase() !== otherId.toLowerCase() && !isMyMessage ? 1 : 0,
+              };
+              if (tokenRef.current) {
+                loadConversations(tokenRef.current);
+              }
+              return [newConv, ...prev];
+            }
+          });
+        }
+      );
+
+      // --- UserOnline handler ---
+      connection.on('UserOnline', (userId: string) => {
+        setOnlineContacts((prev) => {
+          const next = new Set(prev);
+          next.add(userId.toLowerCase());
+          return next;
+        });
+      });
+
+      // --- UserOffline handler ---
+      connection.on('UserOffline', (userId: string) => {
+        setOnlineContacts((prev) => {
+          const next = new Set(prev);
+          next.delete(userId.toLowerCase());
+          return next;
+        });
+      });
+
+      // --- MessageDelivered handler ---
+      connection.on('MessageDelivered', (messageIds: string[]) => {
+        if (!messageIds || messageIds.length === 0) return;
+        const idSet = new Set(messageIds.map((id) => id.toLowerCase()));
+
+        setMessages((prev) =>
+          prev.map((m) => (idSet.has(m.id.toLowerCase()) ? { ...m, isDelivered: true } : m))
+        );
+
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.latestMessage && idSet.has(c.latestMessage.id.toLowerCase())
+              ? { ...c, latestMessage: { ...c.latestMessage, isDelivered: true } }
+              : c
+          )
+        );
+      });
+
+      // --- MessagesRead handler ---
+      connection.on('MessagesRead', (messageIds: string[]) => {
+        if (!messageIds || messageIds.length === 0) return;
+        const idSet = new Set(messageIds.map((id) => id.toLowerCase()));
+
+        setMessages((prev) =>
+          prev.map((m) =>
+            idSet.has(m.id.toLowerCase()) ? { ...m, isRead: true, isDelivered: true } : m
+          )
+        );
+
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.latestMessage && idSet.has(c.latestMessage.id.toLowerCase())
+              ? { ...c, latestMessage: { ...c.latestMessage, isRead: true, isDelivered: true } }
+              : c
+          )
+        );
+      });
+
+      connection.onreconnected(async () => {
+        setIsConnected(true);
+        if (tokenRef.current) {
+          loadConversations(tokenRef.current);
+        }
+      });
+
+      connection.onclose(() => setIsConnected(false));
+
+      try {
+        await connection.start();
+        hubRef.current = connection;
+        setIsConnected(true);
+
+        // Fetch contacts & check online status
+        if (tokenRef.current) {
+          loadConversations(tokenRef.current);
+        }
+      } catch (e) {
+        console.error('SignalR ChatHub Connection Error:', e);
+      }
+    },
+    [loadConversations]
+  );
 
   const disconnect = useCallback(async () => {
     if (hubRef.current) {
       await hubRef.current.stop();
       hubRef.current = null;
       setIsConnected(false);
+      setOnlineContacts(new Set());
     }
   }, []);
 
@@ -210,31 +346,40 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [token, user, connect, loadConversations, disconnect]);
 
-  const loadHistory = useCallback(async (authToken: string, contactId: string) => {
-    setActiveContactId(contactId);
-    activeContactRef.current = contactId;
-    try {
-      const res = await fetch(`${API_BASE}/api/chat/history/${contactId}`, {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setMessages(data);
-        setConversations(prev =>
-          prev.map(c =>
-            c.contactId.toLowerCase() === contactId.toLowerCase() ? { ...c, unreadCount: 0 } : c
-          )
-        );
+  const loadHistory = useCallback(
+    async (authToken: string, contactId: string) => {
+      setActiveContactId(contactId);
+      activeContactRef.current = contactId;
+
+      // Check online status of active contact
+      if (hubRef.current && hubRef.current.state === signalR.HubConnectionState.Connected) {
+        queryOnlineUsers(hubRef.current, [contactId]);
+        hubRef.current.invoke('MarkMessagesAsRead', contactId).catch(() => {});
       }
-    } catch (e) {
-      console.error('Failed to load chat history', e);
-    }
-  }, []);
+
+      try {
+        const res = await fetch(`${API_BASE}/api/chat/history/${contactId}`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setMessages(data);
+          setConversations((prev) =>
+            prev.map((c) =>
+              c.contactId.toLowerCase() === contactId.toLowerCase() ? { ...c, unreadCount: 0 } : c
+            )
+          );
+        }
+      } catch (e) {
+        console.error('Failed to load chat history', e);
+      }
+    },
+    [queryOnlineUsers]
+  );
 
   const sendMessage = useCallback(
     async (receiverId: string, content: string, messageType: string = 'text', contactName?: string) => {
       const currentUser = userRef.current;
-      // Optimistically append outgoing message locally so UI updates instantly
       if (currentUser) {
         const optimisticMsg: ChatMessage = {
           id: 'opt_' + Date.now().toString(),
@@ -244,15 +389,15 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           messageType: messageType,
           timestamp: new Date().toISOString(),
           isRead: false,
+          isDelivered: false,
         };
 
-        setMessages(prev => [...prev, optimisticMsg]);
+        setMessages((prev) => [...prev, optimisticMsg]);
 
-        // Also ensure conversation appears in left list with the actual contactName
-        setConversations(prev => {
-          const exists = prev.some(c => c.contactId.toLowerCase() === receiverId.toLowerCase());
+        setConversations((prev) => {
+          const exists = prev.some((c) => c.contactId.toLowerCase() === receiverId.toLowerCase());
           if (exists) {
-            return prev.map(c =>
+            return prev.map((c) =>
               c.contactId.toLowerCase() === receiverId.toLowerCase()
                 ? {
                     ...c,
@@ -284,7 +429,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else if (tokenRef.current) {
         await connect(tokenRef.current);
         if (hubRef.current) {
-          await (hubRef.current as signalR.HubConnection).invoke('SendMessage', receiverId, content, messageType, contactName);
+          await (hubRef.current as signalR.HubConnection).invoke(
+            'SendMessage',
+            receiverId,
+            content,
+            messageType,
+            contactName
+          );
         }
       }
     },
@@ -323,12 +474,15 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         messages,
         activeContactId,
         isConnected,
+        onlineContacts,
+        isContactOnline,
         loadConversations,
         loadHistory,
         sendMessage,
         uploadAttachment,
         connect,
         disconnect,
+        markAsRead,
       }}
     >
       {children}

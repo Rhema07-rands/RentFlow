@@ -1,5 +1,6 @@
 import {
   ArrowLeft,
+  Check,
   CheckCheck,
   Download,
   FileText,
@@ -51,6 +52,8 @@ export const ChatsPage: React.FC = () => {
     conversations,
     messages,
     isConnected,
+    isContactOnline,
+    markAsRead,
     loadConversations,
     loadHistory,
     sendMessage,
@@ -94,8 +97,9 @@ export const ChatsPage: React.FC = () => {
   useEffect(() => {
     if (token && activeContactId) {
       loadHistory(token, activeContactId);
+      markAsRead(activeContactId);
     }
-  }, [token, activeContactId, loadHistory]);
+  }, [token, activeContactId, loadHistory, markAsRead]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -360,8 +364,16 @@ export const ChatsPage: React.FC = () => {
                     isSelected ? 'bg-[#1E293B]' : 'hover:bg-[#1E293B]/50'
                   }`}
                 >
-                  <div className="w-12 h-12 rounded-full bg-blue-600 text-white font-bold text-base flex items-center justify-center shrink-0">
-                    {getInitials(chat.contactName)}
+                  <div className="relative shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-blue-600 text-white font-bold text-base flex items-center justify-center shrink-0">
+                      {getInitials(chat.contactName)}
+                    </div>
+                    {isContactOnline(chat.contactId) && (
+                      <span
+                        className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#0F172A]"
+                        title="Online"
+                      />
+                    )}
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -371,13 +383,28 @@ export const ChatsPage: React.FC = () => {
                       </h4>
                       <span className="text-[11px] text-[#64748B] shrink-0">{time}</span>
                     </div>
-                    <p
-                      className={`text-xs truncate ${
-                        chat.unreadCount > 0 ? 'text-[#F8FAFC] font-bold' : 'text-[#94A3B8]'
-                      }`}
-                    >
-                      {preview}
-                    </p>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      {user &&
+                        chat.latestMessage &&
+                        chat.latestMessage.senderId.toLowerCase() === user.id.toLowerCase() && (
+                          <span className="shrink-0">
+                            {chat.latestMessage.isRead ? (
+                              <CheckCheck className="w-3.5 h-3.5 text-[#38BDF8]" />
+                            ) : chat.latestMessage.isDelivered ? (
+                              <CheckCheck className="w-3.5 h-3.5 text-[#64748B]" />
+                            ) : (
+                              <Check className="w-3.5 h-3.5 text-[#64748B]" />
+                            )}
+                          </span>
+                        )}
+                      <p
+                        className={`text-xs truncate ${
+                          chat.unreadCount > 0 ? 'text-[#F8FAFC] font-bold' : 'text-[#94A3B8]'
+                        }`}
+                      >
+                        {preview}
+                      </p>
+                    </div>
                   </div>
 
                   {chat.unreadCount > 0 && (
@@ -414,11 +441,15 @@ export const ChatsPage: React.FC = () => {
                 <div className="flex items-center gap-1.5">
                   <span
                     className={`w-2 h-2 rounded-full ${
-                      isConnected ? 'bg-emerald-400' : 'bg-[#64748B]'
+                      activeContactId && isContactOnline(activeContactId)
+                        ? 'bg-emerald-400'
+                        : 'bg-[#64748B]'
                     }`}
                   />
                   <span className="text-xs text-[#94A3B8]">
-                    {isConnected ? 'Online • Instant Delivery' : 'Offline'}
+                    {activeContactId && isContactOnline(activeContactId)
+                      ? 'Online • Instant Delivery'
+                      : 'Offline'}
                   </span>
                 </div>
               </div>
@@ -489,7 +520,15 @@ export const ChatsPage: React.FC = () => {
                           <span className="text-[10px] text-[#64748B]">
                             {formatTimeLabel(msg.timestamp)}
                           </span>
-                          {isMe && <CheckCheck className="w-3.5 h-3.5 text-[#38BDF8]" />}
+                          {isMe && (
+                            msg.isRead ? (
+                              <CheckCheck className="w-3.5 h-3.5 text-[#38BDF8]" title="Read" />
+                            ) : msg.isDelivered ? (
+                              <CheckCheck className="w-3.5 h-3.5 text-[#94A3B8]" title="Delivered" />
+                            ) : (
+                              <Check className="w-3.5 h-3.5 text-[#94A3B8]" title="Sent" />
+                            )
+                          )}
                         </div>
                       </div>
                     </React.Fragment>

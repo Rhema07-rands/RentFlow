@@ -11,6 +11,7 @@ namespace RentFlow.API.Models
         public string MessageType { get; set; } = "text";
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
         public bool IsRead { get; set; } = false;
+        public bool IsDelivered { get; set; } = false;
 
         [NotMapped]
         public string? SenderName { get; set; }

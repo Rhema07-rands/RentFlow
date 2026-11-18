@@ -9,11 +9,13 @@ export interface ChatMessage {
   messageType: string;
   timestamp: string;
   isRead: boolean;
+  isDelivered?: boolean;
 }
 
 export interface ConversationInfo {
   contactId: string;
   contactName: string;
+  contactAvatar?: string;
   latestMessage: ChatMessage | null;
   unreadCount: number;
 }
@@ -21,9 +23,12 @@ export interface ConversationInfo {
 interface ChatContextType {
   conversations: ConversationInfo[];
   messages: ChatMessage[];
+  onlineContacts: Set<string>;
+  isContactOnline: (contactId: string) => boolean;
   loadConversations: (token: string) => Promise<void>;
   loadHistory: (token: string, contactId: string) => Promise<void>;
-  sendMessage: (receiverId: string, content: string, messageType?: string) => Promise<void>;
+  sendMessage: (receiverId: string, content: string, messageType?: string, contactName?: string) => Promise<void>;
+  markAsRead: (contactId: string) => Promise<void>;
   connect: (token: string) => Promise<void>;
   disconnect: () => Promise<void>;
 }
@@ -31,9 +36,12 @@ interface ChatContextType {
 const ChatContext = createContext<ChatContextType>({
   conversations: [],
   messages: [],
+  onlineContacts: new Set(),
+  isContactOnline: () => false,
   loadConversations: async () => {},
   loadHistory: async () => {},
   sendMessage: async () => {},
+  markAsRead: async () => {},
   connect: async () => {},
   disconnect: async () => {},
 });
@@ -46,7 +54,16 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [conversations, setConversations] = useState<ConversationInfo[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [activeContactId, setActiveContactId] = useState<string | null>(null);
+  const [onlineContacts, setOnlineContacts] = useState<Set<string>>(new Set());
   const [hubConnection, setHubConnection] = useState<signalR.HubConnection | null>(null);
+
+  const isContactOnline = useCallback(
+    (contactId: string) => {
+      if (!contactId) return false;
+      return onlineContacts.has(contactId.toLowerCase());
+    },
+    [onlineContacts]
+  );
 
   const connect = async (token: string) => {
     if (hubConnection) return;
@@ -59,25 +76,21 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .build();
 
     connection.on('ReceiveMessage', (message: ChatMessage, senderName?: string, senderAvatar?: string) => {
-      // If we are actively chatting with this person, append to messages
       setMessages(prev => {
-        // Only append if it belongs to the active conversation
         if (activeContactId === message.senderId || activeContactId === message.receiverId) {
-          // Prevent duplicates (SignalR might send it to sender group too, plus our local optimistic update)
-          if (!prev.some(m => m.id === message.id)) {
+          if (!prev.some(m => m.id.toLowerCase() === message.id.toLowerCase())) {
             return [...prev, message];
           }
         }
         return prev;
       });
 
-      // We also need to update the conversations list latest message
       setConversations(prev => {
         const contactId = message.senderId;
-        const exists = prev.some(c => c.contactId === contactId);
+        const exists = prev.some(c => c.contactId.toLowerCase() === contactId.toLowerCase());
         if (exists) {
           return prev.map(c => 
-            c.contactId === contactId 
+            c.contactId.toLowerCase() === contactId.toLowerCase() 
               ? { 
                   ...c, 
                   contactName: senderName || c.contactName,
@@ -102,6 +115,34 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     });
 
+    connection.on('UserOnline', (userId: string) => {
+      setOnlineContacts(prev => new Set(prev).add(userId.toLowerCase()));
+    });
+
+    connection.on('UserOffline', (userId: string) => {
+      setOnlineContacts(prev => {
+        const next = new Set(prev);
+        next.delete(userId.toLowerCase());
+        return next;
+      });
+    });
+
+    connection.on('MessageDelivered', (messageIds: string[]) => {
+      if (!messageIds || messageIds.length === 0) return;
+      const idSet = new Set(messageIds.map(id => id.toLowerCase()));
+      setMessages(prev =>
+        prev.map(m => (idSet.has(m.id.toLowerCase()) ? { ...m, isDelivered: true } : m))
+      );
+    });
+
+    connection.on('MessagesRead', (messageIds: string[]) => {
+      if (!messageIds || messageIds.length === 0) return;
+      const idSet = new Set(messageIds.map(id => id.toLowerCase()));
+      setMessages(prev =>
+        prev.map(m => (idSet.has(m.id.toLowerCase()) ? { ...m, isRead: true, isDelivered: true } : m))
+      );
+    });
+
     try {
       await connection.start();
       setHubConnection(connection);
@@ -114,6 +155,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (hubConnection) {
       await hubConnection.stop();
       setHubConnection(null);
+      setOnlineContacts(new Set());
     }
   };
 
@@ -128,6 +170,16 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (e) {
       console.error('Failed to load conversations', e);
+    }
+  };
+
+  const markAsRead = async (contactId: string) => {
+    if (hubConnection && hubConnection.state === signalR.HubConnectionState.Connected) {
+      try {
+        await hubConnection.invoke('MarkMessagesAsRead', contactId);
+      } catch (e) {
+        console.error('Failed to mark messages as read', e);
+      }
     }
   };
 
@@ -157,7 +209,20 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <ChatContext.Provider value={{ conversations, messages, loadConversations, loadHistory, sendMessage, connect, disconnect }}>
+    <ChatContext.Provider
+      value={{
+        conversations,
+        messages,
+        onlineContacts,
+        isContactOnline,
+        loadConversations,
+        loadHistory,
+        sendMessage,
+        markAsRead,
+        connect,
+        disconnect
+      }}
+    >
       {children}
     </ChatContext.Provider>
   );

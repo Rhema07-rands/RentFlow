@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using RentFlow.API.Data;
+using RentFlow.API.Hubs;
 using RentFlow.API.Models;
 using System.Security.Claims;
 
@@ -14,11 +16,13 @@ namespace RentFlow.API.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly RentFlow.API.Services.ICloudinaryService _cloudinaryService;
+        private readonly IHubContext<ChatHub> _chatHub;
 
-        public ChatController(ApplicationDbContext context, RentFlow.API.Services.ICloudinaryService cloudinaryService)
+        public ChatController(ApplicationDbContext context, RentFlow.API.Services.ICloudinaryService cloudinaryService, IHubContext<ChatHub> chatHub)
         {
             _context = context;
             _cloudinaryService = cloudinaryService;
+            _chatHub = chatHub;
         }
 
         [HttpGet("conversations")]
@@ -109,11 +113,18 @@ namespace RentFlow.API.Controllers
             var unreadMessages = messages.Where(m => m.ReceiverId == userId && !m.IsRead).ToList();
             if (unreadMessages.Any())
             {
+                var readMessageIds = new List<string>();
                 foreach (var msg in unreadMessages)
                 {
                     msg.IsRead = true;
+                    msg.IsDelivered = true;
+                    readMessageIds.Add(msg.Id.ToString());
                 }
                 await _context.SaveChangesAsync();
+
+                // Notify the contact (original sender) so their check marks turn blue
+                var contactGroupId = contactId.ToString().ToLower();
+                await _chatHub.Clients.Group(contactGroupId).SendAsync("MessagesRead", readMessageIds);
             }
 
             return Ok(messages);

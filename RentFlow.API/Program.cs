@@ -130,6 +130,7 @@ _ = Task.Run(async () =>
             ALTER TABLE Users ADD COLUMN IF NOT EXISTS IsPremium TINYINT(1) DEFAULT 0;
             ALTER TABLE Users ADD COLUMN IF NOT EXISTS SubscriptionPlan VARCHAR(100) NULL;
             ALTER TABLE Users ADD COLUMN IF NOT EXISTS SubscriptionExpiresAt DATETIME NULL;
+            ALTER TABLE ChatMessages ADD COLUMN IF NOT EXISTS IsDelivered TINYINT(1) DEFAULT 0;
             DELETE FROM Properties WHERE Title = 'Booty' AND Description = 'Ghhjlk>';
         ");
     }
