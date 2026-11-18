@@ -13,13 +13,32 @@ export interface User {
   subscriptionExpiresAt?: string;
 }
 
+// 30 minutes of inactivity will automatically log the user out
+const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;
+const LAST_ACTIVE_KEY = 'rf_last_active';
+
+/**
+ * Checks if a JWT token has expired by inspecting its 'exp' claim.
+ */
+const isJwtExpired = (jwtToken: string): boolean => {
+  try {
+    const parts = jwtToken.split('.');
+    if (parts.length !== 3) return false;
+    const payload = JSON.parse(atob(parts[1]));
+    if (!payload.exp) return false;
+    return Date.now() >= payload.exp * 1000;
+  } catch {
+    return false;
+  }
+};
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   register: (data: any) => Promise<boolean>;
-  logout: () => void;
+  logout: (reason?: string) => void;
   updateUserState: (updated: Partial<User>) => void;
 }
 
@@ -41,12 +60,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const { showAlert } = useCustomAlert();
 
+  const logout = (reason?: string) => {
+    setToken(null);
+    setUser(null);
+    try {
+      localStorage.removeItem('rf_token');
+      localStorage.removeItem('rf_user');
+      localStorage.removeItem(LAST_ACTIVE_KEY);
+    } catch {}
+    if (reason) {
+      showAlert('Session Expired', reason);
+    }
+  };
+
   useEffect(() => {
     const initAuth = async () => {
       try {
         const storedToken = localStorage.getItem('rf_token');
         const storedUser = localStorage.getItem('rf_user');
+        const storedLastActive = localStorage.getItem(LAST_ACTIVE_KEY);
+
         if (storedToken) {
+          // 1. Verify JWT has not expired
+          if (isJwtExpired(storedToken)) {
+            logout('Your login token has expired. Please sign in again.');
+            setIsLoading(false);
+            return;
+          }
+
+          // 2. Verify inactivity timeout while away from the site
+          if (storedLastActive) {
+            const elapsed = Date.now() - Number(storedLastActive);
+            if (elapsed > INACTIVITY_TIMEOUT_MS) {
+              logout('You were logged out after being away from the site. Please sign in again.');
+              setIsLoading(false);
+              return;
+            }
+          }
+
+          // Still valid — refresh activity timestamp
+          try {
+            localStorage.setItem(LAST_ACTIVE_KEY, Date.now().toString());
+          } catch {}
+
           setToken(storedToken);
           if (storedUser) setUser(JSON.parse(storedUser));
 
@@ -55,6 +111,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const res = await fetch(`${API_BASE}/api/auth/profile`, {
               headers: { Authorization: `Bearer ${storedToken}` },
             });
+            if (res.status === 401) {
+              logout('Your session has expired on the server. Please sign in again.');
+              setIsLoading(false);
+              return;
+            }
             if (res.ok) {
               const fresh = await res.json();
               setUser((prev) => {
@@ -85,6 +146,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
   }, []);
 
+  // Inactivity & Token Lifetime Monitor while user is logged in
+  useEffect(() => {
+    if (!token) return;
+
+    let lastRecorded = Date.now();
+
+    const recordActivity = () => {
+      const now = Date.now();
+      // Throttle localStorage updates to at most once every 10 seconds
+      if (now - lastRecorded > 10000) {
+        lastRecorded = now;
+        try {
+          localStorage.setItem(LAST_ACTIVE_KEY, now.toString());
+        } catch {}
+      }
+    };
+
+    const checkTimeout = () => {
+      // 1. Check if token expired
+      if (isJwtExpired(token)) {
+        logout('Your login token has expired. Please sign in again.');
+        return;
+      }
+
+      // 2. Check inactivity timer
+      const lastActiveStr = localStorage.getItem(LAST_ACTIVE_KEY);
+      if (lastActiveStr) {
+        const elapsed = Date.now() - Number(lastActiveStr);
+        if (elapsed > INACTIVITY_TIMEOUT_MS) {
+          logout('You were inactive for 30 minutes and have been logged out. Please sign in again.');
+        }
+      }
+    };
+
+    // User activity events
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'];
+    events.forEach(evt => window.addEventListener(evt, recordActivity, { passive: true }));
+
+    // Periodic check every 20 seconds
+    const intervalId = setInterval(checkTimeout, 20000);
+
+    // Tab visibility & focus change (e.g. user switches tabs, locks screen, or resumes browser)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkTimeout();
+        recordActivity();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', checkTimeout);
+
+    return () => {
+      events.forEach(evt => window.removeEventListener(evt, recordActivity));
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', checkTimeout);
+    };
+  }, [token]);
+
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       const res = await fetch(`${API_BASE}/api/auth/login`, {
@@ -108,6 +229,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(loggedUser);
         localStorage.setItem('rf_token', data.token);
         localStorage.setItem('rf_user', JSON.stringify(loggedUser));
+        try {
+          localStorage.setItem(LAST_ACTIVE_KEY, Date.now().toString());
+        } catch {}
         showAlert('Welcome Back!', `Logged in as ${loggedUser.name}`);
         return true;
       } else {
@@ -151,13 +275,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('rf_user', JSON.stringify(next));
       return next;
     });
-  };
-
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem('rf_token');
-    localStorage.removeItem('rf_user');
   };
 
   return (
