@@ -28,6 +28,7 @@ interface ChatContextType {
   conversations: ConversationInfo[];
   messages: ChatMessage[];
   activeContactId: string | null;
+  setActiveContactId: (contactId: string | null) => void;
   isConnected: boolean;
   onlineContacts: Set<string>;
   isContactOnline: (contactId: string) => boolean;
@@ -44,6 +45,7 @@ const ChatContext = createContext<ChatContextType>({
   conversations: [],
   messages: [],
   activeContactId: null,
+  setActiveContactId: () => {},
   isConnected: false,
   onlineContacts: new Set(),
   isContactOnline: () => false,
@@ -62,7 +64,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { token, user } = useAuth();
   const [conversations, setConversations] = useState<ConversationInfo[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [activeContactId, setActiveContactId] = useState<string | null>(null);
+  const [activeContactId, setActiveContactIdState] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [onlineContacts, setOnlineContacts] = useState<Set<string>>(new Set());
 
@@ -70,6 +72,14 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const activeContactRef = useRef<string | null>(null);
   const tokenRef = useRef<string | null>(null);
   const userRef = useRef<typeof user>(null);
+
+  const setActiveContactId = useCallback((contactId: string | null) => {
+    setActiveContactIdState(contactId);
+    activeContactRef.current = contactId;
+    if (!contactId) {
+      setMessages([]);
+    }
+  }, []);
 
   useEffect(() => {
     userRef.current = user;
@@ -159,12 +169,16 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const currentContact = activeContactRef.current;
           const currentUser = userRef.current;
 
-          // If we are actively viewing this conversation and receive a message from the contact,
-          // instantly mark as read on the server so the sender gets blue checks
-          if (
-            currentContact &&
-            message.senderId.toLowerCase() === currentContact.toLowerCase()
-          ) {
+          // Only auto-mark as read if:
+          // 1. User actually has THIS specific conversation open in the viewport
+          // 2. The browser tab is active, visible, and focused (not in background or minimized)
+          const isActivelyViewing =
+            Boolean(currentContact) &&
+            message.senderId.toLowerCase() === currentContact!.toLowerCase() &&
+            !document.hidden &&
+            document.hasFocus();
+
+          if (isActivelyViewing) {
             message.isRead = true;
             message.isDelivered = true;
             connection.invoke('MarkMessagesAsRead', currentContact).catch(() => {});
@@ -349,12 +363,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loadHistory = useCallback(
     async (authToken: string, contactId: string) => {
       setActiveContactId(contactId);
-      activeContactRef.current = contactId;
 
       // Check online status of active contact
       if (hubRef.current && hubRef.current.state === signalR.HubConnectionState.Connected) {
         queryOnlineUsers(hubRef.current, [contactId]);
-        hubRef.current.invoke('MarkMessagesAsRead', contactId).catch(() => {});
       }
 
       try {
@@ -374,7 +386,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('Failed to load chat history', e);
       }
     },
-    [queryOnlineUsers]
+    [queryOnlineUsers, setActiveContactId]
   );
 
   const sendMessage = useCallback(
@@ -473,6 +485,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         conversations,
         messages,
         activeContactId,
+        setActiveContactId,
         isConnected,
         onlineContacts,
         isContactOnline,

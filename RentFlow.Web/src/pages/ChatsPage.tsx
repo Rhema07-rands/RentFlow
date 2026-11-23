@@ -4,6 +4,7 @@ import {
   ArrowUpRight,
   Check,
   CheckCheck,
+  Clock,
   Download,
   FileText,
   Image as ImageIcon,
@@ -65,6 +66,7 @@ export const ChatsPage: React.FC = () => {
     isConnected,
     isContactOnline,
     markAsRead,
+    setActiveContactId,
     loadConversations,
     loadHistory,
     sendMessage,
@@ -98,6 +100,14 @@ export const ChatsPage: React.FC = () => {
   const displayName =
     searchParams.get('name') || activeConversation?.contactName || 'RentFlow Contact';
 
+  // Sync routeContactId with ChatContext so activeContactRef is never stuck on stale contacts
+  useEffect(() => {
+    setActiveContactId(routeContactId || null);
+    return () => {
+      setActiveContactId(null);
+    };
+  }, [routeContactId, setActiveContactId]);
+
   useEffect(() => {
     if (token) {
       connect(token);
@@ -108,9 +118,27 @@ export const ChatsPage: React.FC = () => {
   useEffect(() => {
     if (token && activeContactId) {
       loadHistory(token, activeContactId);
-      markAsRead(activeContactId);
+      if (!document.hidden && document.hasFocus()) {
+        markAsRead(activeContactId);
+      }
     }
   }, [token, activeContactId, loadHistory, markAsRead]);
+
+  // When tab/window gains focus while viewing active chat, mark as read
+  useEffect(() => {
+    const handleFocusOrVisible = () => {
+      if (activeContactId && !document.hidden && document.hasFocus()) {
+        markAsRead(activeContactId);
+      }
+    };
+
+    window.addEventListener('focus', handleFocusOrVisible);
+    document.addEventListener('visibilitychange', handleFocusOrVisible);
+    return () => {
+      window.removeEventListener('focus', handleFocusOrVisible);
+      document.removeEventListener('visibilitychange', handleFocusOrVisible);
+    };
+  }, [activeContactId, markAsRead]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -500,7 +528,9 @@ export const ChatsPage: React.FC = () => {
                         chat.latestMessage &&
                         chat.latestMessage.senderId.toLowerCase() === user.id.toLowerCase() && (
                           <span className="shrink-0">
-                            {chat.latestMessage.isRead ? (
+                            {chat.latestMessage.id.startsWith('opt_') ? (
+                              <Clock className="w-3.5 h-3.5 text-[#64748B] animate-pulse" />
+                            ) : chat.latestMessage.isRead ? (
                               <CheckCheck className="w-3.5 h-3.5 text-[#38BDF8]" />
                             ) : chat.latestMessage.isDelivered ? (
                               <CheckCheck className="w-3.5 h-3.5 text-[#64748B]" />
@@ -635,8 +665,21 @@ export const ChatsPage: React.FC = () => {
                             {formatTimeLabel(msg.timestamp)}
                           </span>
                           {isMe && (
-                            <span title={msg.isRead ? 'Read' : msg.isDelivered ? 'Delivered' : 'Sent'} className="inline-flex items-center">
-                              {msg.isRead ? (
+                            <span
+                              title={
+                                msg.id.startsWith('opt_')
+                                  ? 'Sending...'
+                                  : msg.isRead
+                                  ? 'Read'
+                                  : msg.isDelivered
+                                  ? 'Delivered'
+                                  : 'Sent'
+                              }
+                              className="inline-flex items-center"
+                            >
+                              {msg.id.startsWith('opt_') ? (
+                                <Clock className="w-3 h-3 text-[#94A3B8] opacity-75 animate-pulse" />
+                              ) : msg.isRead ? (
                                 <CheckCheck className="w-3.5 h-3.5 text-[#38BDF8]" />
                               ) : msg.isDelivered ? (
                                 <CheckCheck className="w-3.5 h-3.5 text-[#94A3B8]" />
