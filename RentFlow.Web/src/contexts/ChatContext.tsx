@@ -69,6 +69,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [onlineContacts, setOnlineContacts] = useState<Set<string>>(new Set());
 
   const hubRef = useRef<signalR.HubConnection | null>(null);
+  const isConnectingRef = useRef(false);
+  const processedMessageIdsRef = useRef<Set<string>>(new Set());
   const activeContactRef = useRef<string | null>(null);
   const tokenRef = useRef<string | null>(null);
   const userRef = useRef<typeof user>(null);
@@ -153,7 +155,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const connect = useCallback(
     async (authToken: string) => {
-      if (!authToken || hubRef.current) return;
+      if (!authToken || hubRef.current || isConnectingRef.current) return;
+      isConnectingRef.current = true;
 
       const connection = new signalR.HubConnectionBuilder()
         .withUrl(`${API_BASE}/chathub`, {
@@ -169,14 +172,19 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const currentContact = activeContactRef.current;
           const currentUser = userRef.current;
 
-          // Only auto-mark as read if:
-          // 1. User actually has THIS specific conversation open in the viewport
-          // 2. The browser tab is active, visible, and focused (not in background or minimized)
+          // Deduplicate incoming message processing by message ID
+          const msgId = message.id ? message.id.toLowerCase() : '';
+          const isDuplicate = Boolean(msgId && processedMessageIdsRef.current.has(msgId));
+          if (msgId) {
+            processedMessageIdsRef.current.add(msgId);
+          }
+
+          // Auto-mark as read only if user actually has THIS specific conversation open in the viewport
+          // and the browser tab is visible (not in a background tab or minimized)
           const isActivelyViewing =
             Boolean(currentContact) &&
             message.senderId.toLowerCase() === currentContact!.toLowerCase() &&
-            !document.hidden &&
-            document.hasFocus();
+            !document.hidden;
 
           if (isActivelyViewing) {
             message.isRead = true;
@@ -231,7 +239,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
                       contactAvatar: !isMyMessage && resolvedSenderAvatar ? resolvedSenderAvatar : c.contactAvatar,
                       latestMessage: message,
                       unreadCount:
-                        currentContact?.toLowerCase() !== otherId.toLowerCase() && !isMyMessage
+                        currentContact?.toLowerCase() !== otherId.toLowerCase() && !isMyMessage && !isDuplicate
                           ? c.unreadCount + 1
                           : c.unreadCount,
                     }
@@ -256,6 +264,15 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
               return [newConv, ...prev];
             }
           });
+
+          // Sync with server DB unread count whenever receiving an incoming message while not in that chat
+          if (
+            tokenRef.current &&
+            (!currentUser || message.senderId.toLowerCase() !== currentUser.id.toLowerCase()) &&
+            (!currentContact || message.senderId.toLowerCase() !== currentContact.toLowerCase())
+          ) {
+            loadConversations(tokenRef.current);
+          }
         }
       );
 
@@ -335,17 +352,24 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (e) {
         console.error('SignalR ChatHub Connection Error:', e);
+        hubRef.current = null;
+      } finally {
+        isConnectingRef.current = false;
       }
     },
     [loadConversations]
   );
 
   const disconnect = useCallback(async () => {
+    isConnectingRef.current = false;
     if (hubRef.current) {
-      await hubRef.current.stop();
+      const conn = hubRef.current;
       hubRef.current = null;
       setIsConnected(false);
       setOnlineContacts(new Set());
+      try {
+        await conn.stop();
+      } catch {}
     }
   }, []);
 

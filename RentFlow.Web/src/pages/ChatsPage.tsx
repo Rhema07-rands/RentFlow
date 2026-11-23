@@ -110,24 +110,23 @@ export const ChatsPage: React.FC = () => {
 
   useEffect(() => {
     if (token) {
-      connect(token);
       loadConversations(token);
     }
-  }, [token, connect, loadConversations]);
+  }, [token, loadConversations]);
 
   useEffect(() => {
     if (token && activeContactId) {
       loadHistory(token, activeContactId);
-      if (!document.hidden && document.hasFocus()) {
+      if (!document.hidden) {
         markAsRead(activeContactId);
       }
     }
   }, [token, activeContactId, loadHistory, markAsRead]);
 
-  // When tab/window gains focus while viewing active chat, mark as read
+  // When tab/window becomes visible or gains focus while viewing active chat, mark as read
   useEffect(() => {
     const handleFocusOrVisible = () => {
-      if (activeContactId && !document.hidden && document.hasFocus()) {
+      if (activeContactId && !document.hidden) {
         markAsRead(activeContactId);
       }
     };
