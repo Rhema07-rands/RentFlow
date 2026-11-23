@@ -36,13 +36,19 @@ export const DashboardLayout: React.FC = () => {
     { to: '/dashboard/settings', icon: Settings, label: 'Account Settings' },
   ];
 
+  const isChatConversation = location.pathname.startsWith('/dashboard/conversation');
+
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
   return (
-    <div className="min-h-screen bg-[#0F172A] text-[#F8FAFC] flex flex-col md:flex-row">
+    <div
+      className={`bg-[#0F172A] text-[#F8FAFC] flex flex-col md:flex-row ${
+        isChatConversation ? 'h-screen md:h-screen overflow-hidden' : 'min-h-screen'
+      }`}
+    >
       {/* Desktop Left Sidebar */}
       <aside className="hidden md:flex flex-col w-72 bg-[#1E293B]/70 backdrop-blur-xl border-r border-white/5 shrink-0 sticky top-0 h-screen transition-all">
         {/* Brand Logo */}
@@ -141,47 +147,58 @@ export const DashboardLayout: React.FC = () => {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 min-w-0 pb-20 md:pb-0 flex flex-col">
-        <div key={location.pathname} className="page-transition flex-1 flex flex-col">
+      <main
+        className={`flex-1 min-w-0 ${
+          isChatConversation ? 'pb-0 h-full overflow-hidden' : 'pb-20'
+        } md:pb-0 flex flex-col`}
+      >
+        <div
+          key={location.pathname}
+          className={`page-transition flex-1 flex flex-col ${
+            isChatConversation ? 'h-full overflow-hidden' : ''
+          }`}
+        >
           <Outlet />
         </div>
       </main>
 
-      {/* Mobile Bottom Navigation Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#1E293B]/95 backdrop-blur-xl border-t border-white/10 px-2 py-2 flex items-center justify-around">
-        {[
-          { to: '/dashboard/explore', icon: Compass, label: 'Explore' },
-          { to: '/dashboard/search', icon: Search, label: 'Search' },
-          { to: '/dashboard/add', icon: PlusCircle, label: 'Add' },
-          { to: '/dashboard/chats', icon: MessageSquare, label: 'Chats', badge: totalUnread },
-          { to: '/dashboard/settings', icon: UserIcon, label: 'Account' },
-        ].map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `relative flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 ${
-                  isActive ? 'text-[#38BDF8]' : 'text-[#94A3B8] hover:text-[#F8FAFC]'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <Icon className={`w-5 h-5 transition-transform duration-200 ${isActive ? 'scale-110 -translate-y-0.5' : ''}`} />
-                  <span>{item.label}</span>
-                  {item.badge ? (
-                    <span className="absolute top-1 right-2 w-4 h-4 text-[10px] font-bold rounded-full bg-red-500 text-white flex items-center justify-center animate-scale-in shadow-sm shadow-red-500/50">
-                      {item.badge}
-                    </span>
-                  ) : null}
-                </>
-              )}
-            </NavLink>
-          );
-        })}
-      </nav>
+      {/* Mobile Bottom Navigation Bar (Hidden when in chat conversation) */}
+      {!isChatConversation && (
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#1E293B]/95 backdrop-blur-xl border-t border-white/10 px-2 py-2 flex items-center justify-around">
+          {[
+            { to: '/dashboard/explore', icon: Compass, label: 'Explore' },
+            { to: '/dashboard/search', icon: Search, label: 'Search' },
+            { to: '/dashboard/add', icon: PlusCircle, label: 'Add' },
+            { to: '/dashboard/chats', icon: MessageSquare, label: 'Chats', badge: totalUnread },
+            { to: '/dashboard/settings', icon: UserIcon, label: 'Account' },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  `relative flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 ${
+                    isActive ? 'text-[#38BDF8]' : 'text-[#94A3B8] hover:text-[#F8FAFC]'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <Icon className={`w-5 h-5 transition-transform duration-200 ${isActive ? 'scale-110 -translate-y-0.5' : ''}`} />
+                    <span>{item.label}</span>
+                    {item.badge ? (
+                      <span className="absolute top-1 right-2 w-4 h-4 text-[10px] font-bold rounded-full bg-red-500 text-white flex items-center justify-center animate-scale-in shadow-sm shadow-red-500/50">
+                        {item.badge}
+                      </span>
+                    ) : null}
+                  </>
+                )}
+              </NavLink>
+            );
+          })}
+        </nav>
+      )}
     </div>
   );
 };

@@ -414,7 +414,11 @@ export const ChatsPage: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 flex h-[calc(100vh-5rem)] md:h-screen overflow-hidden bg-[#0F172A]">
+    <div
+      className={`flex-1 flex ${
+        activeContactId ? 'h-[100dvh] md:h-screen' : 'h-[calc(100vh-5rem)] md:h-screen'
+      } overflow-hidden bg-[#0F172A]`}
+    >
       {/* Left Pane: Conversations List */}
       <div
         className={`${
@@ -563,13 +567,14 @@ export const ChatsPage: React.FC = () => {
 
       {/* Right Pane: Active Conversation Window */}
       {activeContactId ? (
-        <div className="flex-1 flex flex-col bg-[#0F172A] min-w-0">
-          {/* Conversation Header */}
-          <div className="h-20 px-6 border-b border-white/5 bg-[#0F172A]/90 backdrop-blur-md flex items-center justify-between shrink-0">
+        <div className="flex-1 flex flex-col bg-[#0F172A] min-w-0 h-full overflow-hidden">
+          {/* Conversation Header (Sticky) */}
+          <div className="sticky top-0 z-20 h-20 px-4 sm:px-6 border-b border-white/5 bg-[#0F172A]/95 backdrop-blur-md flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3.5 min-w-0">
               <button
                 onClick={() => navigate('/dashboard/chats')}
-                className="lg:hidden p-2 rounded-xl bg-[#1E293B] text-[#F8FAFC]"
+                className="lg:hidden p-2 rounded-xl bg-[#1E293B] text-[#F8FAFC] hover:bg-[#334155] transition-colors shrink-0"
+                aria-label="Back to conversations"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
@@ -584,11 +589,11 @@ export const ChatsPage: React.FC = () => {
                   <span
                     className={`w-2 h-2 rounded-full ${
                       activeContactId && isContactOnline(activeContactId)
-                        ? 'bg-emerald-400'
+                        ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]'
                         : 'bg-[#64748B]'
                     }`}
                   />
-                  <span className="text-xs text-[#94A3B8]">
+                  <span className="text-xs text-[#94A3B8] truncate">
                     {activeContactId && isContactOnline(activeContactId)
                       ? 'Online • Instant Delivery'
                       : 'Offline'}
@@ -598,7 +603,7 @@ export const ChatsPage: React.FC = () => {
             </div>
 
             {/* Audio & Video Call Buttons */}
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
               <button
                 onClick={() => startCall(activeContactId, displayName, 'audio')}
                 className="w-10 h-10 rounded-full bg-[#38BDF8]/15 text-[#38BDF8] hover:bg-[#38BDF8] hover:text-[#0F172A] flex items-center justify-center transition-all btn-press shadow-sm"
@@ -617,7 +622,7 @@ export const ChatsPage: React.FC = () => {
           </div>
 
           {/* Messages Scroll Area */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-3">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3">
             {sortedMessages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center text-[#64748B]">
                 <div className="w-16 h-16 rounded-full bg-[#1E293B] flex items-center justify-center mb-3 text-[#38BDF8] font-bold text-xl">
@@ -699,7 +704,7 @@ export const ChatsPage: React.FC = () => {
           </div>
 
           {/* Input Bar */}
-          <div className="p-4 bg-[#1E293B] border-t border-white/5 relative">
+          <div className="p-3 sm:p-4 bg-[#1E293B] border-t border-white/5 relative shrink-0">
             {/* Share Files Popover */}
             {showAttachMenu && (
               <div className="absolute bottom-20 left-4 bg-[#0F172A] border border-white/10 rounded-2xl p-3 shadow-2xl flex items-center gap-4 z-20 animate-fade-in-up">
