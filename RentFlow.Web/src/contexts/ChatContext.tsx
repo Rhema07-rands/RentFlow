@@ -27,6 +27,8 @@ export interface ConversationInfo {
 interface ChatContextType {
   conversations: ConversationInfo[];
   messages: ChatMessage[];
+  isLoadingConversations: boolean;
+  isLoadingMessages: boolean;
   activeContactId: string | null;
   setActiveContactId: (contactId: string | null) => void;
   isConnected: boolean;
@@ -44,6 +46,8 @@ interface ChatContextType {
 const ChatContext = createContext<ChatContextType>({
   conversations: [],
   messages: [],
+  isLoadingConversations: true,
+  isLoadingMessages: false,
   activeContactId: null,
   setActiveContactId: () => {},
   isConnected: false,
@@ -62,8 +66,20 @@ export const useChat = () => useContext(ChatContext);
 
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { token, user } = useAuth();
-  const [conversations, setConversations] = useState<ConversationInfo[]>([]);
+  const [conversations, setConversations] = useState<ConversationInfo[]>(() => {
+    try {
+      const savedUser = localStorage.getItem('rf_auth_user');
+      if (savedUser) {
+        const u = JSON.parse(savedUser);
+        const cached = localStorage.getItem(`rf_cached_convs_${u.id}`);
+        if (cached) return JSON.parse(cached);
+      }
+    } catch {}
+    return [];
+  });
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isLoadingConversations, setIsLoadingConversations] = useState(true);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [activeContactId, setActiveContactIdState] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [onlineContacts, setOnlineContacts] = useState<Set<string>>(new Set());
@@ -121,7 +137,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loadConversations = useCallback(
     async (authToken: string) => {
-      if (!authToken) return;
+      if (!authToken) {
+        setIsLoadingConversations(false);
+        return;
+      }
       try {
         const res = await fetch(`${API_BASE}/api/chat/conversations`, {
           headers: { Authorization: `Bearer ${authToken}` },
@@ -130,6 +149,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const data: ConversationInfo[] = await res.json();
           setConversations(data);
 
+          try {
+            if (userRef.current?.id) {
+              localStorage.setItem(`rf_cached_convs_${userRef.current.id}`, JSON.stringify(data));
+            }
+          } catch {}
+
           if (hubRef.current && hubRef.current.state === signalR.HubConnectionState.Connected) {
             const ids = data.map((c) => c.contactId);
             queryOnlineUsers(hubRef.current, ids);
@@ -137,6 +162,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (e) {
         console.error('Failed to load conversations', e);
+      } finally {
+        setIsLoadingConversations(false);
       }
     },
     [queryOnlineUsers]
@@ -387,6 +414,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loadHistory = useCallback(
     async (authToken: string, contactId: string) => {
       setActiveContactId(contactId);
+      setIsLoadingMessages(true);
 
       // Check online status of active contact
       if (hubRef.current && hubRef.current.state === signalR.HubConnectionState.Connected) {
@@ -408,6 +436,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (e) {
         console.error('Failed to load chat history', e);
+      } finally {
+        setIsLoadingMessages(false);
       }
     },
     [queryOnlineUsers, setActiveContactId]
@@ -508,6 +538,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         conversations,
         messages,
+        isLoadingConversations,
+        isLoadingMessages,
         activeContactId,
         setActiveContactId,
         isConnected,
