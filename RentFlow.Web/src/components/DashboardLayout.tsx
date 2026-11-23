@@ -37,6 +37,8 @@ export const DashboardLayout: React.FC = () => {
   ];
 
   const isChatConversation = location.pathname.startsWith('/dashboard/conversation');
+  const isChatsList = location.pathname.startsWith('/dashboard/chats');
+  const isChatRoute = isChatConversation || isChatsList;
 
   const handleLogout = () => {
     logout();
@@ -46,7 +48,7 @@ export const DashboardLayout: React.FC = () => {
   return (
     <div
       className={`bg-[#0F172A] text-[#F8FAFC] flex flex-col md:flex-row ${
-        isChatConversation ? 'h-screen md:h-screen overflow-hidden' : 'min-h-screen'
+        isChatRoute ? 'h-screen md:h-screen overflow-hidden' : 'min-h-screen'
       }`}
     >
       {/* Desktop Left Sidebar */}
@@ -149,13 +151,17 @@ export const DashboardLayout: React.FC = () => {
       {/* Main Content Area */}
       <main
         className={`flex-1 min-w-0 ${
-          isChatConversation ? 'pb-0 h-full overflow-hidden' : 'pb-20'
-        } md:pb-0 flex flex-col`}
+          isChatConversation
+            ? 'pb-0 h-full overflow-hidden'
+            : isChatsList
+            ? 'pb-20 md:pb-0 h-full overflow-hidden'
+            : 'pb-20 md:pb-0'
+        } flex flex-col`}
       >
         <div
           key={location.pathname}
           className={`page-transition flex-1 flex flex-col ${
-            isChatConversation ? 'h-full overflow-hidden' : ''
+            isChatRoute ? 'h-full overflow-hidden' : ''
           }`}
         >
           <Outlet />

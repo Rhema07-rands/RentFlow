@@ -413,42 +413,40 @@ export const ChatsPage: React.FC = () => {
   };
 
   return (
-    <div
-      className={`flex-1 flex ${
-        activeContactId ? 'h-[100dvh] md:h-screen' : 'h-[calc(100vh-5rem)] md:h-screen'
-      } overflow-hidden bg-[#0F172A]`}
-    >
+    <div className="flex-1 flex h-full overflow-hidden bg-[#0F172A]">
       {/* Left Pane: Conversations List */}
       <div
         className={`${
           activeContactId ? 'hidden lg:flex' : 'flex'
-        } w-full lg:w-96 flex-col border-r border-white/5 bg-[#0F172A] shrink-0`}
+        } w-full lg:w-96 flex-col border-r border-white/5 bg-[#0F172A] shrink-0 h-full overflow-hidden`}
       >
-        {/* Header */}
-        <div className="p-6 border-b border-white/5 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-extrabold text-[#F8FAFC]">Chats</h1>
+        {/* Sticky Header: Chats Title + Call Logs Button + Search Input */}
+        <div className="sticky top-0 z-20 bg-[#0F172A]/95 backdrop-blur-md border-b border-white/5 shrink-0">
+          <div className="p-4 sm:p-6 pb-3 flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-extrabold text-[#F8FAFC]">Chats</h1>
+            </div>
+            <button
+              onClick={() => navigate('/dashboard/call-history')}
+              className="w-10 h-10 rounded-full bg-[#1E293B] border border-white/10 flex items-center justify-center text-[#F8FAFC] hover:border-[#38BDF8] transition-colors btn-press shadow-sm"
+              title="Call History"
+            >
+              <PhoneCall className="w-4 h-4 text-[#38BDF8]" />
+            </button>
           </div>
-          <button
-            onClick={() => navigate('/dashboard/call-history')}
-            className="w-10 h-10 rounded-full bg-[#1E293B] border border-white/10 flex items-center justify-center text-[#F8FAFC] hover:border-[#38BDF8] transition-colors"
-            title="Call History"
-          >
-            <PhoneCall className="w-4 h-4 text-[#38BDF8]" />
-          </button>
-        </div>
 
-        {/* Search Input */}
-        <div className="p-4">
-          <div className="flex items-center bg-[#1E293B] border border-white/10 rounded-2xl px-4 h-11">
-            <Search className="w-4 h-4 text-[#64748B] mr-2.5 shrink-0" />
-            <input
-              type="text"
-              placeholder="Search conversations..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-transparent text-sm text-[#F8FAFC] placeholder-[#64748B] focus:outline-none"
-            />
+          {/* Search Input */}
+          <div className="px-4 sm:px-6 pb-4">
+            <div className="flex items-center bg-[#1E293B] border border-white/10 rounded-2xl px-4 h-11 focus-within:border-[#38BDF8] transition-colors">
+              <Search className="w-4 h-4 text-[#64748B] mr-2.5 shrink-0" />
+              <input
+                type="text"
+                placeholder="Search conversations..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-transparent text-sm text-[#F8FAFC] placeholder-[#64748B] focus:outline-none"
+              />
+            </div>
           </div>
         </div>
 
