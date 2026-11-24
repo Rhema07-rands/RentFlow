@@ -435,8 +435,8 @@ export const ChatsPage: React.FC = () => {
           activeContactId ? 'hidden lg:flex' : 'flex'
         } w-full lg:w-96 flex-col border-r border-white/5 bg-[#0F172A] shrink-0 h-full overflow-hidden`}
       >
-        {/* Sticky Header: Chats Title + Call Logs Button + Search Input */}
-        <div className="sticky top-0 z-20 bg-[#0F172A]/95 backdrop-blur-md border-b border-white/5 shrink-0">
+        {/* Header: Chats Title + Call Logs Button + Search Input (Static in place) */}
+        <div className="bg-[#0F172A] border-b border-white/5 shrink-0">
           <div className="p-4 sm:p-6 pb-3 flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-extrabold text-[#F8FAFC]">Chats</h1>
@@ -743,8 +743,8 @@ export const ChatsPage: React.FC = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Bar (Sticky at bottom for mobile & desktop) */}
-          <div className="sticky bottom-0 z-20 p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-4 bg-[#1E293B]/95 backdrop-blur-md border-t border-white/5 shrink-0">
+          {/* Input Bar (Static in place at bottom) */}
+          <div className="p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-4 bg-[#1E293B] border-t border-white/5 shrink-0 relative">
             {/* Share Files Popover */}
             {showAttachMenu && (
               <div className="absolute bottom-[calc(100%+0.5rem)] left-4 bg-[#0F172A] border border-white/10 rounded-2xl p-3 shadow-2xl flex items-center gap-3 sm:gap-4 z-30 animate-fade-in-up">
