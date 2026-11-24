@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { API_BASE } from '../config/api';
 import { useCustomAlert } from './AlertContext';
 
@@ -55,6 +56,7 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,6 +70,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem('rf_user');
       localStorage.removeItem(LAST_ACTIVE_KEY);
     } catch {}
+
+    try {
+      navigate('/', { replace: true });
+    } catch {
+      if (window.location.pathname !== '/') {
+        window.location.replace('/');
+      }
+    }
+
     if (reason) {
       showAlert('Session Expired', reason);
     }

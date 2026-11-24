@@ -30,11 +30,11 @@ import { MyReviewsPage } from './pages/profile/MyReviewsPage';
 
 export default function App() {
   return (
-    <AlertProvider>
-      <AuthProvider>
-        <ChatProvider>
-          <CallProvider>
-            <BrowserRouter>
+    <BrowserRouter>
+      <AlertProvider>
+        <AuthProvider>
+          <ChatProvider>
+            <CallProvider>
               <CallOverlayModal />
               <Routes>
                 {/* Public Routes */}
@@ -71,10 +71,10 @@ export default function App() {
                 {/* Fallback */}
                 <Route path="*" element={<Navigate to="/dashboard/explore" replace />} />
               </Routes>
-            </BrowserRouter>
-          </CallProvider>
-        </ChatProvider>
-      </AuthProvider>
-    </AlertProvider>
+            </CallProvider>
+          </ChatProvider>
+        </AuthProvider>
+      </AlertProvider>
+    </BrowserRouter>
   );
 }
