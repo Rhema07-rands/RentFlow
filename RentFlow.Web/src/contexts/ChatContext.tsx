@@ -68,8 +68,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { token, user } = useAuth();
   const [conversations, setConversations] = useState<ConversationInfo[]>(() => {
     try {
-      const savedUser = localStorage.getItem('rf_auth_user');
-      if (savedUser) {
+      const savedUser = localStorage.getItem('rf_user');
+      const savedToken = localStorage.getItem('rf_token');
+      if (savedUser && savedToken) {
         const u = JSON.parse(savedUser);
         const cached = localStorage.getItem(`rf_cached_convs_${u.id}`);
         if (cached) return JSON.parse(cached);
@@ -78,7 +79,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return [];
   });
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [isLoadingConversations, setIsLoadingConversations] = useState(true);
+  const [isLoadingConversations, setIsLoadingConversations] = useState(() => {
+    try {
+      return Boolean(localStorage.getItem('rf_token') && localStorage.getItem('rf_user'));
+    } catch {
+      return false;
+    }
+  });
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [activeContactId, setActiveContactIdState] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -408,6 +415,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       disconnect();
       setConversations([]);
       setMessages([]);
+      setIsLoadingConversations(false);
+      setIsLoadingMessages(false);
     }
   }, [token, user, connect, loadConversations, disconnect]);
 

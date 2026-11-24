@@ -453,7 +453,14 @@ export const ChatsPage: React.FC = () => {
 
         {/* Conversation Items */}
         <div className="flex-1 overflow-y-auto divide-y divide-white/[0.03]">
-          {isLoadingConversations && conversations.length === 0 ? (
+          {!user || !token ? (
+            <div className="text-center p-10 text-[#64748B]">
+              <p className="text-sm font-semibold text-[#94A3B8]">No conversations yet</p>
+              <p className="text-xs mt-1">
+                Open any property listing and click &ldquo;Apply / Chat with Owner&rdquo; to start chatting!
+              </p>
+            </div>
+          ) : isLoadingConversations && conversations.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-[#94A3B8]">
               <Loader2 className="w-8 h-8 text-[#38BDF8] animate-spin mb-3" />
               <p className="text-sm font-semibold text-[#F8FAFC]">Loading conversations...</p>
