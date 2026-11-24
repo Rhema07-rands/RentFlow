@@ -721,11 +721,11 @@ export const ChatsPage: React.FC = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Bar */}
-          <div className="p-3 sm:p-4 bg-[#1E293B] border-t border-white/5 relative shrink-0">
+          {/* Input Bar (Sticky at bottom for mobile & desktop) */}
+          <div className="sticky bottom-0 z-20 p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-4 bg-[#1E293B]/95 backdrop-blur-md border-t border-white/5 shrink-0">
             {/* Share Files Popover */}
             {showAttachMenu && (
-              <div className="absolute bottom-20 left-4 bg-[#0F172A] border border-white/10 rounded-2xl p-3 shadow-2xl flex items-center gap-4 z-20 animate-fade-in-up">
+              <div className="absolute bottom-[calc(100%+0.5rem)] left-4 bg-[#0F172A] border border-white/10 rounded-2xl p-3 shadow-2xl flex items-center gap-4 z-30 animate-fade-in-up">
                 <button
                   type="button"
                   onClick={() => imageInputRef.current?.click()}
