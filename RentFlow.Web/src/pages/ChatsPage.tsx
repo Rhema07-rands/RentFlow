@@ -91,6 +91,7 @@ export const ChatsPage: React.FC = () => {
   const recordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const imageInputRef = useRef<HTMLInputElement | null>(null);
+  const videoInputRef = useRef<HTMLInputElement | null>(null);
   const docInputRef = useRef<HTMLInputElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -159,10 +160,10 @@ export const ChatsPage: React.FC = () => {
     await sendMessage(activeContactId, text, 'text', displayName);
   };
 
-  // Image & Document Upload Handler
+  // Image, Video & Document Upload Handler
   const handleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
-    type: 'image' | 'document'
+    type: 'image' | 'video' | 'document'
   ) => {
     const file = e.target.files?.[0];
     setShowAttachMenu(false);
@@ -276,6 +277,19 @@ export const ChatsPage: React.FC = () => {
             alt="Shared attachment"
             onClick={() => setLightboxImage(msg.content)}
             className="max-h-64 rounded-xl object-cover cursor-pointer hover:opacity-95 transition-opacity border border-white/10"
+          />
+        </div>
+      );
+    }
+
+    if (msg.messageType === 'video') {
+      return (
+        <div className="space-y-1.5 max-w-xs sm:max-w-sm">
+          <video
+            src={msg.content}
+            controls
+            preload="metadata"
+            className="max-h-64 sm:max-h-72 w-full rounded-xl object-contain border border-white/10 bg-black/50 shadow-md"
           />
         </div>
       );
@@ -495,6 +509,7 @@ export const ChatsPage: React.FC = () => {
 
               let preview = chat.latestMessage?.content || 'Started a conversation';
               if (chat.latestMessage?.messageType === 'image') preview = '📷 Photo';
+              else if (chat.latestMessage?.messageType === 'video') preview = '📹 Video';
               else if (chat.latestMessage?.messageType === 'document') preview = '📄 Document';
               else if (chat.latestMessage?.messageType === 'voice') preview = '🎤 Voice Note';
               else if (
@@ -732,25 +747,36 @@ export const ChatsPage: React.FC = () => {
           <div className="sticky bottom-0 z-20 p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-4 bg-[#1E293B]/95 backdrop-blur-md border-t border-white/5 shrink-0">
             {/* Share Files Popover */}
             {showAttachMenu && (
-              <div className="absolute bottom-[calc(100%+0.5rem)] left-4 bg-[#0F172A] border border-white/10 rounded-2xl p-3 shadow-2xl flex items-center gap-4 z-30 animate-fade-in-up">
+              <div className="absolute bottom-[calc(100%+0.5rem)] left-4 bg-[#0F172A] border border-white/10 rounded-2xl p-3 shadow-2xl flex items-center gap-3 sm:gap-4 z-30 animate-fade-in-up">
                 <button
                   type="button"
                   onClick={() => imageInputRef.current?.click()}
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-white/5 transition-all btn-press"
+                  className="flex flex-col items-center gap-1.5 p-2.5 sm:p-3 rounded-xl hover:bg-white/5 transition-all btn-press"
                 >
-                  <div className="w-12 h-12 rounded-full bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
-                    <ImageIcon className="w-6 h-6" />
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
+                    <ImageIcon className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
                   <span className="text-xs font-bold text-[#F8FAFC]">Image</span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => docInputRef.current?.click()}
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-white/5 transition-all btn-press"
+                  onClick={() => videoInputRef.current?.click()}
+                  className="flex flex-col items-center gap-1.5 p-2.5 sm:p-3 rounded-xl hover:bg-white/5 transition-all btn-press"
                 >
-                  <div className="w-12 h-12 rounded-full bg-amber-500/15 text-amber-400 flex items-center justify-center">
-                    <FileText className="w-6 h-6" />
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-purple-500/15 text-purple-400 flex items-center justify-center">
+                    <Video className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </div>
+                  <span className="text-xs font-bold text-[#F8FAFC]">Video</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => docInputRef.current?.click()}
+                  className="flex flex-col items-center gap-1.5 p-2.5 sm:p-3 rounded-xl hover:bg-white/5 transition-all btn-press"
+                >
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-amber-500/15 text-amber-400 flex items-center justify-center">
+                    <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
                   <span className="text-xs font-bold text-[#F8FAFC]">Document</span>
                 </button>
@@ -762,6 +788,13 @@ export const ChatsPage: React.FC = () => {
               type="file"
               accept="image/*"
               onChange={(e) => handleFileUpload(e, 'image')}
+              className="hidden"
+            />
+            <input
+              ref={videoInputRef}
+              type="file"
+              accept="video/*"
+              onChange={(e) => handleFileUpload(e, 'video')}
               className="hidden"
             />
             <input
